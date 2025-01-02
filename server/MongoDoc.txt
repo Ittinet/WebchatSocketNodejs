@@ -1,0 +1,21 @@
+//Get ข้อมูล
+
+1.การค้นหาจากชื่อที่ตรงกันทั้งหมด (Exact Match)
+ถ้าคุณต้องการค้นหาชื่อที่ตรงกันทั้งหมด (เช่น ผู้ใช้ที่มีชื่อเดียวกันกับที่ค้นหา) คุณสามารถใช้ find() และกำหนดเงื่อนไขให้ตรงกับชื่อที่ผู้ใช้ป้อนมา:
+const UserData = await User.find({ username: username }).select('-password');  // ไม่ให้แสดงรหัสผ่าน
+
+2. การค้นหาจากชื่อที่ตรงกันบางส่วน (Partial Match)
+ถ้าคุณต้องการให้การค้นหาจากชื่อสามารถจับคู่คำบางคำที่คล้ายกันได้ (เช่น ผู้ใช้ที่มีชื่อที่มีคำว่า "John" อยู่ในชื่อ) คุณสามารถใช้ Regular Expression (regex) ในการค้นหาได้:
+onst UserData = await User.find({ username: { $regex: username, $options: 'i' } })
+
+3.การค้นหาตามคำในชื่อ (Search within a word)
+ถ้าคุณต้องการค้นหาคำบางคำในชื่อ (เช่น ชื่อที่ประกอบด้วยคำว่า "John" อยู่ในตำแหน่งใดก็ได้ของชื่อ), คุณสามารถใช้ Regex แบบนี้
+const UserData = await User.find({ username: { $regex: `.*${username}.*`, $options: 'i' } })
+
+4. การค้นหาจากหลายคำ (Full-Text Search)
+MongoDB รองรับการค้นหาข้อความเต็มรูปแบบ (Full-text search) ด้วยการใช้ Text Index ซึ่งช่วยให้คุณค้นหาคำจากฟิลด์ที่เป็นข้อความได้อย่างมีประสิทธิภาพ
+การใช้ Text Index จะมีขั้นตอนดังนี้:
+1.สร้าง Text Index ในฟิลด์ที่ต้องการค้นหา (เช่น username)
+2.ใช้คำสั่ง $text เพื่อค้นหาคำจากนั้น
+UserSchema.index({ username: 'text' });  // สร้าง index สำหรับการค้นหาชื่อ
+const UserData = await User.find({ $text: { $search: username } }).select('-password');
