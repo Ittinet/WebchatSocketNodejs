@@ -139,7 +139,7 @@ exports.GetRequest = async (req, res) => {
         const requestData = await FriendRequest.find({
             receiver: usercurrentid,
             status: "pending"
-        }).populate('sender receiver')
+        }).populate('sender receiver', '-password')
 
         if (requestData.length <= 0) {
             return res.status(401).json({
@@ -338,7 +338,7 @@ exports.DeleteFriend = async (req, res) => {
             ]
         })
 
-        res.json({
+        res.status(200).json({
             message: "delete complete",
             DeleteFriend
         })
@@ -350,3 +350,66 @@ exports.DeleteFriend = async (req, res) => {
     }
 
 }
+
+exports.GetProfileUser = async (req, res) => {
+    try {
+        const { id } = req.params
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                message: "ไม่พบรายชื่อบุคคลนี้ในระบบ"
+            });
+        }
+
+        const userData = await User.findOne({
+            _id: id
+        }).select('-password -role')
+
+
+        res.status(200).json({
+            message: 'ok',
+            userData
+        })
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({
+            message: error.message
+        })
+    }
+}
+
+exports.GetAlreadySent = async (req, res) => {
+    try {
+        const id = req.user.user_id
+        const sentData = await FriendRequest.find({
+            sender: id,
+            status: "pending"
+        })
+        res.status(200).json({
+            sentData
+        })
+
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({
+            message: error.message
+        })
+    }
+
+}
+
+exports.CancleRequest = async (req,res) => {
+    try {
+        const currentId = req.user.user_id
+        const SentAlready = await FriendRequest.find({
+            sender: currentId,
+            receiver: 
+        })
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({
+            message: error.message
+        })
+    }
+    // ทำต่อให้เสร็จ
+}
+

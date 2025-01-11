@@ -24,18 +24,33 @@ const Navbar = () => {
         SearchFriend()
     }, [SearchQuery])
 
+    // useEffect(() => {
+    //     // ตรวจจับการคลิกนอก div ที่ต้องการ
+    //     const handleClickOutside = (event) => {
+    //         if (searchRef.current && !searchRef.current.contains(event.target)) {
+    //             setOpenChat(false)  // ถ้าคลิกนอก div จะปิด Search bar
+    //         }
+    //     }
+
+    //     // เพิ่ม event listener
+    //     document.addEventListener('mousedown', handleClickOutside)
+
+    //     // ลบ event listener เมื่อ component ถูก unmount
+    //     return () => {
+    //         document.removeEventListener('mousedown', handleClickOutside)
+    //     }
+    // }, [])
+
+
     useEffect(() => {
-        // ตรวจจับการคลิกนอก div ที่ต้องการ
-        const handleClickOutside = (event) => {
-            if (searchRef.current && !searchRef.current.contains(event.target)) {
-                setOpenChat(false)  // ถ้าคลิกนอก div จะปิด Search bar
+        const handleClickOutside = (e) => {
+            if (searchRef.current && !searchRef.current.contains(e.target)) {
+                setOpenChat(false)
             }
         }
 
-        // เพิ่ม event listener
         document.addEventListener('mousedown', handleClickOutside)
 
-        // ลบ event listener เมื่อ component ถูก unmount
         return () => {
             document.removeEventListener('mousedown', handleClickOutside)
         }
@@ -106,7 +121,6 @@ const Navbar = () => {
                                     <input
                                         onChange={handleChangeSearchFriend}
                                         onFocus={() => setOpenChat(true)}
-
                                         id="searchbar"
                                         className="bg-transparent focus:outline-none focus:border-none w-full"
                                         placeholder="ค้นหา..."
@@ -120,7 +134,7 @@ const Navbar = () => {
                                 {
                                     (FriendSearch.length > 0 && OpenChat) &&
                                     FriendSearch.map((item, index) =>
-                                        <Link to={`/${item._id}`} key={index} className='flex px-3 py-2 gap-4 items-center hover:bg-[#ded2e9]'>
+                                        <Link onClick={() => setOpenChat(false)} to={`/profile/${item._id}`} key={index} className='flex px-3 py-2 gap-4 items-center hover:bg-[#ded2e9]'>
                                             <div>
                                                 <div className='w-12 h-12 rounded-full overflow-hidden'>
                                                     <img src={item.profile_picture} alt="" />
