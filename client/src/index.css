@@ -1,3 +1,10 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+body {
+  box-sizing: border-box;
+  font-family: "IBM Plex Sans Thai", serif;
+  font-weight: 400;
+  font-style: normal;
+}
