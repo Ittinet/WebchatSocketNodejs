@@ -8,7 +8,7 @@ exports.register = async (req, res) => {
         const { username, email, password } = req.body
 
         if (!username || !email || !password) {
-            return res.json({
+            return res.status(401).json({
                 message: "กรุณาใส่ข้อมูลให้ครบ"
             })
         }
@@ -17,7 +17,7 @@ exports.register = async (req, res) => {
             email: email
         })
         if (aleadyUser) {
-            return res.json({
+            return res.status(401).json({
                 message: 'ขออภัยมีอีเมลนี้อยู่ในระบบแล้ว!'
             })
         }
@@ -31,7 +31,7 @@ exports.register = async (req, res) => {
         })
 
         await user.save()
-        res.json({
+        res.status(200).json({
             message: 'สมัครสมาชิกสำเร็จ!'
         })
     } catch (error) {
@@ -46,7 +46,7 @@ exports.login = async (req, res) => {
     try {
         const { email, password } = req.body
         if (!email || !password) {
-            return res.json({
+            return res.status(401).json({
                 message: "กรุณาใส่ข้อมูลให้ครบ"
             })
         }
@@ -56,13 +56,13 @@ exports.login = async (req, res) => {
         })
 
         if (!checkuser) {
-            return res.json({
+            return res.status(401).json({
                 message: "ไม่พบ email นี้ในระบบ"
             })
         }
         const checkhashpassword = await bcrypt.compare(password, checkuser.password)
         if (!checkhashpassword) {
-            return res.status(400).json({
+            return res.status(401).json({
                 message: "อีเมลหรือรหัสผ่านไม่ถูกต้อง!"
             })
         }
@@ -91,6 +91,34 @@ exports.login = async (req, res) => {
     }
 }
 
+exports.checklogin = async (req, res) => {
+    try {
+        const payload = req.user
+        const user = await User.findOne({
+            email: payload.email
+        }).select('-password')
+        if (!user) {
+            return res.status(401).json({
+                message: "Token ไม่ถูกต้อง"
+            })
+        }
+        if (user.isactive !== "enabled") {
+            return res.status(401).json({
+                message: "Account นี้ถูกระงับชั่วคราวกรุณาติดต่อผู้ดูแล"
+            })
+        }
+
+        res.status(200).json(
+            user
+        )
+
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({
+            message: error.message
+        })
+    }
+}
 
 
 

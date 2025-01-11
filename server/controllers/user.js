@@ -23,17 +23,24 @@ exports.GetUser = async (req, res) => {
 exports.SeachUser = async (req, res) => {
     try {
         const query = req.query.query
+
+        if (!query) {
+            return res.status(200).json({
+                message: 'ไม่พบผลลัพธ์'
+            })
+        }
+
         const UserData = await User.find({ username: { $regex: `^${query}`, $options: 'i' } })
             .select('-password')
             .limit(10);
 
-        if (UserData.length <= 0) {
-            return res.status(401).json({
-                message: 'ไม่พบข้อมูล'
-            })
-        }
+        // if (UserData.length <= 0) {
+        //     return res.status(401).json({
+        //         message: 'ไม่พบข้อมูล'
+        //     })
+        // }
 
-        res.json(UserData)
+        res.status(200).json(UserData)
     } catch (error) {
         console.error(error)
         res.status(500).json({
@@ -271,16 +278,26 @@ exports.GetFirend = async (req, res) => {
                 },
                 { status: 'accepted' }
             ]
-        }).sort({ createdAt: -1 })
+        }).sort({ createdAt: -1 }).populate('user1 user2')
 
         if (friendData.length <= 0) {
-            return res.status(401).json({
-                message: "ไม่พบเพื่อนของคุณ"
+            return res.status(200).json({
+                message: "ไม่พบเพื่อนของคุณ",
+                friend: friendData
             })
         }
+
+        const Friends = friendData.map((item) => {
+            if (currentuser === item.user1._id.toString()) {
+                return item.user2
+            } else {
+                return item.user1
+            }
+        })
+
         res.status(200).json({
             message: "ok",
-            friend: friendData
+            friend: Friends
         })
 
     } catch (error) {
