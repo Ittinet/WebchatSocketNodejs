@@ -1,5 +1,5 @@
 const express = require('express')
-const { GetUser, SeachUser, GetCurrentUser, AddFriend, AcceptRequest, GetRequest, DeleteFriend, RejectRequest, GetFirend, GetProfileUser, GetAlreadySent } = require('../controllers/user')
+const { GetUser, SeachUser, GetCurrentUser, AddFriend, AcceptRequest, GetRequest, DeleteFriend, RejectRequest, GetFirend, GetProfileUser, GetAlreadySent, CancleRequest } = require('../controllers/user')
 const { checkUser } = require('../middleware/authcheck')
 const router = express.Router()
 
@@ -12,6 +12,8 @@ router.get('/request', checkUser, GetRequest)
 router.get('/request/alreadysent', checkUser, GetAlreadySent)
 router.post('/request/send', checkUser, AddFriend)
 router.post('/request/accept/:id', checkUser, AcceptRequest)
+
+router.delete('/request/cancle/:id', checkUser, CancleRequest)
 router.delete('/request/reject/:id', checkUser, RejectRequest)
 
 router.get('/friend', checkUser, GetFirend)

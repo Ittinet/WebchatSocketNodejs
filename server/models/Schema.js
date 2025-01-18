@@ -113,12 +113,52 @@ const messageSchema = new mongoose.Schema({
     }
 })
 
-userSchema.index({ username: 'text' });
+const postSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        require: true
+
+    },
+    images: {
+        type: String,
+        default: ''
+    },
+    content: {
+        type: String,
+        require: true
+    },
+    comments: [{
+        user: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        },
+        content: { type: String },
+        createAt: { type: Date, default: Date.now }
+    }],
+    likes: [{
+        user: {
+            type: mongoose.Schema.Types.ObjectId,
+        },
+        type: {
+            type: String,
+            enum: ['like', 'love', 'sad', 'laugh']
+        }
+    }],
+    createAt: {
+        type: Date,
+        default: Date.now
+    }
+
+
+})
+
 
 exports.Message = mongoose.model('Message', messageSchema)
 exports.FriendRequest = mongoose.model('FriendRequest', friendRequestSchema)
 exports.User = mongoose.model('User', userSchema)
 exports.Friendship = mongoose.model('FriendShip', friendshipSchema)
+exports.Post = mongoose.model('Post', postSchema)
 
 
 

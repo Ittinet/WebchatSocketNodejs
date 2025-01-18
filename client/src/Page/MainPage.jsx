@@ -3,13 +3,17 @@ import FriendChat from "../component/FriendChat";
 import Sidebar from "../component/Sidebar";
 import { Outlet } from "react-router-dom";
 import Chatwindow from "../component/Chatwindow";
+import RequestWindow from "../component/RequestWindow";
+import { useState } from "react";
 
 const App = () => {
+    const [isOpenRequestMenu, setIsOpenRequestMenu] = useState(false)
+
     return (
         <div className="relative">
             {/* Navbar */}
             <div className="sticky top-0 z-[80] drop-shadow-md">
-                <Navbar />
+                <Navbar setOpenMenu={setIsOpenRequestMenu} />
             </div>
 
             {/* Body */}
@@ -34,6 +38,9 @@ const App = () => {
                     <FriendChat />
                 </div>
             </div>
+
+            {/* FriendRequestWindow */}
+            <RequestWindow OpenMenu={isOpenRequestMenu} setOpenMenu={setIsOpenRequestMenu} />
 
             {/* Chatwindow */}
             {/* <Chatwindow /> */}

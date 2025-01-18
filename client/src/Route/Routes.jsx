@@ -7,6 +7,8 @@ import ReelsPage from '../Page/SubPage/ReelsPage'
 import ProfileUser from '../Page/SubPage/ProfileUser'
 import LayoutProfilePage from '../Page/LayoutProfilePage'
 
+
+
 const router = createBrowserRouter([
     {
         path: '/',

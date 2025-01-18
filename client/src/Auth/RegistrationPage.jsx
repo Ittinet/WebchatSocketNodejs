@@ -1,6 +1,8 @@
 import { useState } from "react"
-import useAuthStore from "../store/Authstore"
 import { useNavigate } from "react-router-dom"
+import { useDispatch, useSelector } from "react-redux"
+import { Login, Register } from "../Reducers/authSlice"
+import { toast } from "react-toastify"
 
 const LoginState = {
     email: '',
@@ -14,12 +16,14 @@ const RegisterState = {
 }
 
 const RegistrationPage = () => {
+    const dispatch = useDispatch()
+
     const [switchRL, setswitchRL] = useState('signin')
     const [LoginForm, setLoginForm] = useState(LoginState)
     const [RegisterForm, setRegisterForm] = useState(RegisterState)
 
-    const actionRegister = useAuthStore(state => state.actionRegister)
-    const actionLogin = useAuthStore(state => state.actionLogin)
+    const loading = useSelector(state => state.auth.loading)
+
 
 
     const navigate = useNavigate()
@@ -30,11 +34,20 @@ const RegistrationPage = () => {
 
     const handleSubmitRegister = async (e) => {
         e.preventDefault()
-        const res = await actionRegister(RegisterForm)
-        if (res) {
+        // const res = await actionRegister(RegisterForm)
+        // if (res) {
+        //     navigate('/')
+        // }
+        const res = await dispatch(Register(RegisterForm))
+        if (res.type.endsWith('/fulfilled')) {
             navigate('/')
+
+        } else {
+            toast.error(res.payload)
         }
+        console.log('res', res)
     }
+
 
     const handleChangeRegister = (e) => {
         setRegisterForm({
@@ -45,10 +58,17 @@ const RegistrationPage = () => {
 
     const handleSubmitLogin = async (e) => {
         e.preventDefault()
-        const res = await actionLogin(LoginForm)
-        console.log(res)
-        if (res) {
+        // const res = await actionLogin(LoginForm)
+        // console.log(res)
+        // if (res) {
+        //     navigate('/')
+        // }
+        const res = await dispatch(Login(LoginForm))
+        if (res.type.endsWith('/fulfilled')) {
             navigate('/')
+            toast.success('เข้าสู่ระบบสำเร็จ!')
+        } else {
+            toast.error(res.payload)
         }
     }
 
@@ -99,7 +119,7 @@ const RegistrationPage = () => {
                                             <label className="font-bold w-32" htmlFor="">Password:</label>
                                             <input className="bg-gray-100 px-5 py-2 rounded-full w-full" name="password" type="text" onChange={handleChangeLogin} />
                                         </div>
-                                        <button onClick={handleSubmitLogin} className="bg-[#d5bcfd] px-5 py-2 rounded-full mt-20">Login</button>
+                                        <button onClick={handleSubmitLogin} className="bg-[#d5bcfd] px-5 py-2 rounded-full mt-20">{loading ? 'Loading...' : 'Login'}</button>
                                     </div>
                                 </form>
                             </div>

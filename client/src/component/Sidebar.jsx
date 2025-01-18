@@ -1,14 +1,18 @@
 import { useEffect } from "react"
-import useAuthStore from "../store/Authstore"
-import useDataStore from "../store/Datastore"
+import { useDispatch, useSelector } from "react-redux"
+import { Getcurrentuser } from "../Reducers/userSlice"
 
 const Sidebar = () => {
-    const CurrentUser = useDataStore(state => state.CurrentUserData)
-    const GetCurrentUser = useDataStore(state => state.getCurrentUserData)
-    const token = useAuthStore(state => state.token)
+    // const CurrentUser = useDataStore(state => state.CurrentUserData)
+    // const GetCurrentUser = useDataStore(state => state.getCurrentUserData)
+
+    const CurrentUser = useSelector(state => state.user.currentuser)
+    const token = useSelector(state => state.auth.token)
+
+    const dispatch = useDispatch()
 
     useEffect(() => {
-        GetCurrentUser(token)
+        dispatch(Getcurrentuser(token))
     }, [token])
 
     return (

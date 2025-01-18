@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import useAuthStore from '../store/Authstore'
 import axios from 'axios'
 import Loading from '../component/Loading'
+import { useSelector } from 'react-redux'
 
 const Checkauth = ({ element }) => {
     const [checkuser, setCheckUser] = useState(false)
     const [loading, setLoading] = useState(true)
-    const token = useAuthStore((state) => state.token)
+    const token = useSelector(state => state.auth.token)
 
     useEffect(() => {
         if (token) {

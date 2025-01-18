@@ -1,14 +1,22 @@
-import { ArrowLeft, Bell, Home, MessageCircleMore, Search, Youtube } from 'lucide-react'
-import React, { useEffect, useRef, useState } from 'react'
+import { ArrowLeft, Bell, Home, MessageCircleMore, Search, Users, Youtube } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import useDataStore from '../store/Datastore'
-import useAuthStore from '../store/Authstore'
 import axios from 'axios'
 
-const Navbar = () => {
-    const CurrentUser = useDataStore(state => state.CurrentUserData)
-    const GetCurrentUser = useDataStore(state => state.getCurrentUserData)
-    const token = useAuthStore(state => state.token)
+import QuestionAnswerIcon from '@mui/icons-material/QuestionAnswer';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import FriendNotify from './Navbar/FriendNotify'
+import { useDispatch, useSelector } from 'react-redux'
+import { Getcurrentuser } from '../Reducers/userSlice'
+
+const Navbar = ({ setOpenMenu }) => {
+    // const CurrentUser = useDataStore(state => state.CurrentUserData)
+    // const GetCurrentUser = useDataStore(state => state.getCurrentUserData)
+    // const token = useAuthStore(state => state.token)
+    const dispatch = useDispatch()
+
+    const CurrentUser = useSelector(state => state.user.currentuser)
+    const token = useSelector(state => state.auth.token)
 
     const [OpenChat, setOpenChat] = useState(false)
     const [SearchQuery, setSearchQuery] = useState('')
@@ -17,44 +25,30 @@ const Navbar = () => {
     const searchRef = useRef(null)
 
     useEffect(() => {
-        GetCurrentUser(token)
-    }, [token])
+        dispatch(Getcurrentuser(token))
+    }, [])
 
     useEffect(() => {
         SearchFriend()
     }, [SearchQuery])
 
-    // useEffect(() => {
-    //     // ตรวจจับการคลิกนอก div ที่ต้องการ
-    //     const handleClickOutside = (event) => {
-    //         if (searchRef.current && !searchRef.current.contains(event.target)) {
-    //             setOpenChat(false)  // ถ้าคลิกนอก div จะปิด Search bar
-    //         }
-    //     }
-
-    //     // เพิ่ม event listener
-    //     document.addEventListener('mousedown', handleClickOutside)
-
-    //     // ลบ event listener เมื่อ component ถูก unmount
-    //     return () => {
-    //         document.removeEventListener('mousedown', handleClickOutside)
-    //     }
-    // }, [])
-
-
     useEffect(() => {
-        const handleClickOutside = (e) => {
-            if (searchRef.current && !searchRef.current.contains(e.target)) {
-                setOpenChat(false)
+        // ตรวจจับการคลิกนอก div ที่ต้องการ
+        const handleClickOutside = (event) => {
+            if (searchRef.current && !searchRef.current.contains(event.target)) {
+                setOpenChat(false)  // ถ้าคลิกนอก div จะปิด Search bar
             }
         }
 
+        // เพิ่ม event listener
         document.addEventListener('mousedown', handleClickOutside)
 
+        // ลบ event listener เมื่อ component ถูก unmount
         return () => {
             document.removeEventListener('mousedown', handleClickOutside)
         }
     }, [])
+
 
     const SearchFriend = async () => {
         try {
@@ -96,6 +90,7 @@ const Navbar = () => {
                     }>
                         <Youtube size={30} color='white' />
                     </NavLink>
+
                 </div>
 
 
@@ -162,24 +157,34 @@ const Navbar = () => {
                 <div className="fixed right-5">
 
                     <div className="flex justify-center items-center gap-5">
+
+                        {/* Friend */}
+                        <div onClick={() => setOpenMenu(true)}>
+                            <FriendNotify />
+                        </div>
+
+
                         {/* Message */}
-                        <div>
+                        <div className='relative'>
                             <button className="bg-[#e7b9b9] p-2.5 rounded-full">
-                                <MessageCircleMore size={25} color='white' />
+                                <QuestionAnswerIcon size={25} className='text-white' />
                             </button>
+                            <div className='absolute w-6 h-6 bg-red-600 rounded-full left-[-5px] top-[-1px] text-[12px] flex items-center justify-center p-2.5 font-bold text-white animate-bounce'>25</div>
                         </div>
 
                         {/* Notifi */}
-                        <div>
+                        <div className='relative'>
                             <button className="bg-[#e7b9b9] p-2.5 rounded-full">
-                                <Bell size={25} color='white' />
+                                <NotificationsIcon size={25} className='text-white' />
                             </button>
+                            <div className='absolute w-6 h-6 bg-red-600 rounded-full left-[-5px] top-[-1px] text-[12px] flex items-center justify-center p-2.5 font-bold text-white animate-bounce'>25</div>
                         </div>
 
                         {/* Account */}
                         <div className="max-w-10">
                             <img src={CurrentUser?.profile_picture} alt="" />
                         </div>
+
                     </div>
 
                 </div>

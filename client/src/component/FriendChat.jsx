@@ -1,31 +1,20 @@
 import axios from 'axios'
 import { Ellipsis, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import useAuthStore from '../store/Authstore'
+import { useDispatch, useSelector } from 'react-redux'
+import { GetcurrentFriend } from '../Reducers/userSlice'
 
 const FriendChat = () => {
     const [OpenChat, setOpenChat] = useState(false)
-    const [FriendData, setFriendData] = useState([])
 
-    const token = useAuthStore(state => state.token)
+    const dispatch = useDispatch()
+    const token = useSelector(state => state.auth.token)
+    const currentFriend = useSelector(state => state.user.currentFriend)
 
     useEffect(() => {
-        GetFriendUser()
+        dispatch(GetcurrentFriend(token))
     }, [])
 
-    const GetFriendUser = async () => {
-        try {
-            const res = await axios.get('http://localhost:8000/api/friend', {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            })
-            setFriendData(res.data.friend)
-        } catch (error) {
-            console.log(error)
-        }
-    }
-    console.log(FriendData)
 
     const handleOpenChat = () => {
 
@@ -44,7 +33,7 @@ const FriendChat = () => {
 
                 <div>
                     {
-                        FriendData.length > 0 && FriendData.map((item, index) =>
+                        currentFriend.length > 0 && currentFriend.map((item, index) =>
                             <div key={index} onClick={handleOpenChat} className='mt-3 py-2 px-2 hover:bg-[#f8e6e6] cursor-pointer rounded-lg'>
                                 <div className='flex items-center gap-4'>
                                     <div className='max-w-9 relative'>

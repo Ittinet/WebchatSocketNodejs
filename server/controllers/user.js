@@ -141,11 +141,6 @@ exports.GetRequest = async (req, res) => {
             status: "pending"
         }).populate('sender receiver', '-password')
 
-        if (requestData.length <= 0) {
-            return res.status(401).json({
-                message: "ไม่พบคำขอ"
-            })
-        }
         res.status(200).json({
             message: "ok",
             data: requestData
@@ -172,7 +167,8 @@ exports.AcceptRequest = async (req, res) => {
 
         const checkrequest = await FriendRequest.findOne({
             sender: id,
-            receiver: userCurrentId
+            receiver: userCurrentId,
+            status: "pending"
         })
 
 
@@ -209,6 +205,7 @@ exports.AcceptRequest = async (req, res) => {
 
         res.json({
             message: "ตอบรับคำขอเป็นเพื่อนสำเร็จ",
+            request_id: checkrequest._id
         })
     } catch (error) {
         console.error(error)
@@ -254,7 +251,7 @@ exports.RejectRequest = async (req, res) => {
         //ทำต่อให้เสร็จ 
         res.status(200).json({
             message: "reject complete",
-            CheckRequest
+            request_id: deletedRequest._id
         })
 
     } catch (error) {
@@ -338,9 +335,17 @@ exports.DeleteFriend = async (req, res) => {
             ]
         })
 
+        const DeleteRequest = await FriendRequest.findOneAndDelete({
+            $or: [
+                { sender: currentuser, receiver: id },
+                { sender: id, receiver: currentuser }
+            ]
+        })
+
         res.status(200).json({
             message: "delete complete",
-            DeleteFriend
+            DeleteFriend,
+            DeleteRequest
         })
     } catch (error) {
         console.error(error)
@@ -397,12 +402,27 @@ exports.GetAlreadySent = async (req, res) => {
 
 }
 
-exports.CancleRequest = async (req,res) => {
+exports.CancleRequest = async (req, res) => {
     try {
         const currentId = req.user.user_id
-        const SentAlready = await FriendRequest.find({
+        const UserTargetId = req.params.id
+        const SentAlready = await FriendRequest.findOne({
             sender: currentId,
-            receiver: 
+            receiver: UserTargetId
+        })
+
+        if (!SentAlready) {
+            return res.status(401).json({
+                message: "คำขอนี้ได้ถูกลบไปแล้ว !!"
+            })
+        }
+
+        await FriendRequest.deleteOne({
+            _id: SentAlready._id
+        })
+        res.status(200).json({
+            message: "Delete Success",
+            SentAlready
         })
     } catch (error) {
         console.error(error)
