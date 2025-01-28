@@ -10,7 +10,7 @@ export const Register = createAsyncThunk('auth/Register', async (form, { rejectW
             return reslogin.data
         }
     } catch (error) {
-        return rejectWithValue(error.response?.data?.message || 'เกิดข้อผิดพลาดในการลงทะเบียน')
+        return rejectWithValue(error.response?.data?.message || 'ขณะนี้เซิฟเวอร์ปิดปรับปรุงกรุณาลองใหม่ภายหลัง')
     }
 })
 
@@ -19,7 +19,7 @@ export const Login = createAsyncThunk('auth/Login', async (form, { rejectWithVal
         const reslogin = await axios.post("http://localhost:8000/api/login", form)
         return reslogin.data
     } catch (error) {
-        return rejectWithValue(error.response?.data?.message || 'เกิดข้อผิดพลาดในการล็อคอิน')
+        return rejectWithValue(error.response?.data?.message || 'ขณะนี้เซิฟเวอร์ปิดปรับปรุงกรุณาลองใหม่ภายหลัง')
     }
 })
 

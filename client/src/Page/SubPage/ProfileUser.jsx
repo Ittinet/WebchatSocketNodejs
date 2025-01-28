@@ -5,25 +5,30 @@ import Loading from "../../component/Loading";;
 import { toast } from "react-toastify";
 import { TailSpin } from "react-loader-spinner";
 import IconLoading1 from "../../component/Icon/IconLoading1";
-import { UserRoundX } from "lucide-react";
+import { Camera, UserRoundX } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { GetcurrentFriend, GetcurrentRequest, Getcurrentuser } from "../../Reducers/userSlice";
+import { GetcurrentFriend, GetcurrentRequest, Getcurrentuser, OpenEditImage } from "../../Reducers/userSlice";
+import { useSocket } from "../../SocketContext";
+import FileInput from "../../component/ImageProfile/FileInput"
+import LayoutEditImage from "../../component/ImageProfile/LayoutEditImage";
+import ShowProfileImage from "../../component/ShowProfileImage";
 
-
-const ProfileUser = () => {
+const ProfileUser = ({ isOpenPopupImage, setIsOpenPopupImage }) => {
     const { id } = useParams();
 
     const dispatch = useDispatch()
+
+    const { socket } = useSocket()
 
     const token = useSelector(state => state.auth.token)
     const CurrentUserData = useSelector(state => state.user.currentuser)
     const friendData = useSelector(state => state.user.currentFriend)
     const requestUser = useSelector(state => state.user.currentRequest)
-
+    const isOpenEditImage = useSelector((state => state.user.isOpenEditImage))
 
     const friendMenuRef = useRef()
 
-    const [userData, setUserData] = useState([])
+    const [userData, setUserData] = useState({})
     const [loading, setLoading] = useState(true)
     const [isRequestloading, setIsRequestloading] = useState(false)
 
@@ -33,12 +38,15 @@ const ProfileUser = () => {
     const [isRequestFromUser, setIsRequestFromUser] = useState(false)
     const [AlreadySent, setAlreadySent] = useState([])
 
+    console.log('userData', userData)
     // Menu
     const [isOpenMenuFriend, setIsOpenMenuFriend] = useState(false)
+    const [isOpenProfileImage, setIsOpenProfileImage] = useState(false)
 
     const handleOpenMenuFriend = () => {
         setIsOpenMenuFriend(!isOpenMenuFriend)
     }
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -155,6 +163,13 @@ const ProfileUser = () => {
                     Authorization: `Bearer ${token}`
                 }
             })
+            console.log('frienddata', res.data)
+
+            socket.emit('AddFriend', {
+                ...res.data.newRequest,
+                socketid: userData.socketId
+            })
+
 
         } catch (error) {
             if (error.response) {
@@ -278,8 +293,19 @@ const ProfileUser = () => {
                         <div>
                             <div className='flex gap-5'>
                                 <div className='relative w-[170px] h-[160px]'>
-                                    <div className='w-[170px] h-[170px] overflow-hidden flex rounded-full absolute top-[-30px]'>
-                                        <img className='object-cover' src={userData.profile_picture} alt="" />
+                                    <div className="absolute top-[-30px]">
+                                        <div className="relative">
+                                            <div onClick={() => setIsOpenProfileImage(true)} className='w-[170px] h-[170px] overflow-hidden flex rounded-full items-center justify-center hover:scale-95 cursor-pointer'>
+                                                <img className='object-cover' src={userData.profile_cropped} alt="" />
+                                            </div>
+                                            {
+                                                CurrentUserData._id === id &&
+                                                <div className='absolute bottom-0 right-1'>
+                                                    <button onClick={() => dispatch(OpenEditImage(true))} className="p-2 rounded-full bg-[#d4cdcd] hover:scale-95 cursor-pointer font-bold"><Camera fill="white" stroke="#d4cdcd" /></button>
+                                                </div>
+                                            }
+
+                                        </div>
                                     </div>
                                 </div>
                                 <div className='flex flex-col gap-1 mt-8'>
@@ -293,24 +319,29 @@ const ProfileUser = () => {
                             <div className='flex gap-3 text-lg font-bold text-gray-500'>
 
                                 {
-                                    isFriend ? (
-                                        <button onClick={handleOpenMenuFriend} className='bg-[#e8dcf8] px-3 py-2 rounded-lg flex items-center gap-2'>
-                                            {isRequestloading && <IconLoading1 />} เพื่อน
+                                    CurrentUserData._id === id ? (
+                                        <button className='bg-[#e8dcf8] px-3 py-2 rounded-lg flex items-center gap-2'>
+                                            {isRequestloading && <IconLoading1 />} แก้ไขโปรไฟล์
                                         </button>
                                     )
-                                        : isRequestFromUser ? (
-                                            <button onClick={handleAcceptRequest} className='bg-[#e8dcf8] px-3 py-2 rounded-lg flex items-center gap-2'>
-                                                {isRequestloading && <IconLoading1 />} ตอบรับ
-                                            </button>
-                                        ) : isSent ? (
-                                            <button onClick={handleCancelRequest} className='bg-[#e8dcf8] px-3 py-2 rounded-lg flex items-center gap-2'>
-                                                {isRequestloading && <IconLoading1 />} ยกเลิกคำขอ
-                                            </button>
-                                        ) : (
-                                            <button onClick={handleAddFriend} className='bg-[#e8dcf8] px-3 py-2 rounded-lg flex items-center gap-2'>
-                                                {isRequestloading && <IconLoading1 />} เพิ่มเพื่อน +
+                                        : isFriend ? (
+                                            <button onClick={handleOpenMenuFriend} className='bg-[#e8dcf8] px-3 py-2 rounded-lg flex items-center gap-2'>
+                                                {isRequestloading && <IconLoading1 />} เพื่อน
                                             </button>
                                         )
+                                            : isRequestFromUser ? (
+                                                <button onClick={handleAcceptRequest} className='bg-[#e8dcf8] px-3 py-2 rounded-lg flex items-center gap-2'>
+                                                    {isRequestloading && <IconLoading1 />} ตอบรับ
+                                                </button>
+                                            ) : isSent ? (
+                                                <button onClick={handleCancelRequest} className='bg-[#e8dcf8] px-3 py-2 rounded-lg flex items-center gap-2'>
+                                                    {isRequestloading && <IconLoading1 />} ยกเลิกคำขอ
+                                                </button>
+                                            ) : (
+                                                <button onClick={handleAddFriend} className='bg-[#e8dcf8] px-3 py-2 rounded-lg flex items-center gap-2'>
+                                                    {isRequestloading && <IconLoading1 />} เพิ่มเพื่อน +
+                                                </button>
+                                            )
                                 }
 
                                 <div className='bg-[#e8dcf8] px-3 py-2 rounded-lg'>
@@ -346,6 +377,21 @@ const ProfileUser = () => {
                     </div>
                 </div>
             </div>
+
+            {/* EditProfileImage Popup */}
+            {
+                isOpenEditImage &&
+                <div>
+                    <LayoutEditImage setUserData={setUserData} />
+                </div>
+            }
+
+            {/* ShowProfile */}
+            {
+                isOpenProfileImage &&
+                <ShowProfileImage imageProfile={userData.profile_picture} setIsOpenProfileImage={setIsOpenProfileImage} />
+            }
+
         </div>
     )
 

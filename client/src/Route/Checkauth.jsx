@@ -1,13 +1,25 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import axios from 'axios'
 import Loading from '../component/Loading'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
+import { io } from 'socket.io-client'
+import { useSocket } from '../SocketContext'
+import { updateOfflineStatus, updateOnlineStatus } from '../Reducers/userSlice'
+import { UpdateChatIsOffline, UpdateChatIsOnline } from '../Reducers/chatSlice'
 
 const Checkauth = ({ element }) => {
+    const dispatch = useDispatch()
+    const { connectSocket } = useSocket();
     const [checkuser, setCheckUser] = useState(false)
+    const [isSocketConnected, setIsSocketConnected] = useState(false)
     const [loading, setLoading] = useState(true)
     const token = useSelector(state => state.auth.token)
+
+    const user = useSelector(state => state.auth.user)
+    const currentFriend = useSelector(state => state.user.currentFriend)
+
+
 
     useEffect(() => {
         if (token) {
@@ -18,6 +30,53 @@ const Checkauth = ({ element }) => {
         }
 
     }, [token])
+
+    useEffect(() => {
+        if (checkuser) {
+            const socketInstance = io('http://localhost:8000', {
+                extraHeaders: {
+                    Authorization: `Bearer ${token}`
+                },
+                reconnect: true,               // เปิดใช้งาน reconnect
+                reconnectionAttempts: Infinity,       // พยายามเชื่อมต่อใหม่ 5 ครั้ง
+                reconnectionDelay: 1000,       // หน่วงเวลา 1 วินาทีระหว่างการพยายามเชื่อมต่อ
+                reconnectionDelayMax: 5000,    // เวลาหน่วงสูงสุด 5 วินาที
+                timeout: 10000,
+            })
+
+            socketInstance.on('connect', () => {
+                connectSocket(socketInstance)
+                setIsSocketConnected(true)
+                socketInstance.emit('updateStatus', { userid: user.user_id, socketid: socketInstance.id })
+            })
+
+            socketInstance.on('connect_error', (error) => {
+                console.log(error)
+                setIsSocketConnected(false)
+            })
+
+            // อัพเดท Status เมื่อ online  อัพเดทตั้งข้อมูลแชท และข้อมูลเพื่อน
+            socketInstance.on('isUserOnline', ({ userid, socketid }) => {
+                dispatch(updateOnlineStatus({ userid, socketid }))
+                dispatch(UpdateChatIsOnline({ userid, socketid }))
+            })
+
+            //อัพเดท Status เมื่อ Offline อัพเดทตั้งข้อมูลแชท และข้อมูลเพื่อน
+            socketInstance.on('isUserOffline', ({ userid, socketid }) => {
+                dispatch(updateOfflineStatus({ userid, socketid }))
+                dispatch(UpdateChatIsOffline({ userid, socketid }))
+            })
+
+            return () => {
+                socketInstance.close()
+                setIsSocketConnected(false)
+            }
+
+        }
+    }, [checkuser, token])
+
+
+
 
     const handleChecktoken = async () => {
         try {
@@ -33,7 +92,7 @@ const Checkauth = ({ element }) => {
                 setLoading(false)
             }, 1000)
         } catch (error) {
-            console.log(error)
+            console.log('Token Check Failed', error)
             setLoading(false)
             setCheckUser(false)
         }
@@ -46,10 +105,11 @@ const Checkauth = ({ element }) => {
     return (
         <div>
             {
-                checkuser ? element : <Navigate to={'/authen'} />
+                checkuser && isSocketConnected ? element : <Navigate to={'/authen'} />
             }
         </div>
     )
 }
 
 export default Checkauth
+

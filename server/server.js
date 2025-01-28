@@ -7,6 +7,8 @@ const socketIO = require('socket.io')
 const connectDB = require('./config/mongodb')
 const http = require('http')
 const { readdirSync } = require("fs")
+const jwt = require('jsonwebtoken');
+const { User } = require('./models/Schema');
 // const authRouter = require("./routes/auth")
 // const categoryRouter = require("./routes/category")
 
@@ -19,9 +21,10 @@ const PORT = 8000
 
 
 // middleware
-app.use(morgan('dev'))
-app.use(express.json())
+// app.use(morgan('dev'))
+app.use(express.json({ limit: '2mb' }))
 app.use(cors())
+
 // app.use('/api', authRouter)
 // app.use('/api', categoryRouter)
 readdirSync('./routes').map((item) => app.use('/api', require(`./routes/${item}`)))
@@ -45,79 +48,80 @@ const io = socketIO(server, {
     }
 })
 
-module.exports = io;
 
-let connectedUser = []
 
-io.on('connection', (socket) => {
-    console.log('A user connected: ' + socket.id);
-
-    socket.on('setname', (name) => {
-        socket.username = name
-        connectedUser.push(socket.username)
-        io.emit('updateuser', connectedUser)
-        console.log('connecteduser', connectedUser)
-    })
-
-    socket.on('chatuser', (data) => {
-        const { sender, receiver, message } = data;
-        if (connectedUser.includes(receiver)) {
-            const room = [sender, receiver].sort().join('-')
-            socket.join(room);
-            console.log(`${sender} and ${receiver} are now in room: ${room}`);
-
-            io.to(room).emit('chatMessageUser', {
-                from: sender,
-                message: message
-            })
-        } else {
-            console.log(`User ${receiver} is not connected.`);
+// MiddleWare Socket
+const verifyToken = (socket, next) => {
+    const HeadersToken = socket.handshake.headers['authorization']
+    if (!HeadersToken) {
+        return next(new Error('Authorization token required'))
+    }
+    const token = HeadersToken.split(" ")[1]
+    jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
+        if (err) {
+            return next(new Error('Invalid token'))
         }
 
+        socket.user = decoded;
+        next()
     })
 
-    socket.on('chatMessage', (msg) => {
-        io.emit('chatMessage', {
-            from: socket.username,
-            message: msg
-        })
+}
+io.use(verifyToken);
+
+// Function
+const UpdateStatus = async (socketid, id, status) => {
+    try {
+        const updateStatus = await User.findOneAndUpdate(
+            { _id: id },
+            {
+                $set: {
+                    status: status,
+                    socketId: status === 'online' ? socketid : null,
+                    last_active: status !== 'online' ? Date.now() : null
+                }
+            },
+            { new: true }
+        )
+
+    } catch (error) {
+        console.log('Error updating user Status :', error)
+    }
+}
+
+
+io.on('connection', (socket) => {
+    const userid = socket.user.user_id
+    console.log('User Connected: ' + socket.user.email)
+
+    UpdateStatus(socket.id, userid, 'online')
+
+    socket.on('updateStatus', ({ userid, socketid }) => {
+        socket.broadcast.emit(('isUserOnline'), { userid, socketid })
     })
 
-    // เมื่อได้รับข้อความแชท
+    socket.on('SentMessage', (data) => {
+        const { socketid, ...messagedata } = data;
+        const { sender, ...messagedata1 } = data;
+
+        io.to(socketid).emit('NewMessage', messagedata)
+        io.to(socketid).emit('NotityfyChat', sender)
+    })
+
+    socket.on('AddFriend', (data) => {
+        const { socketid, ...newRequest } = data
+        console.log(newRequest)
+        io.to(socketid).emit('newRequest', newRequest)
+    })
+
+
 
     // เมื่อผู้ใช้ตัดการเชื่อมต่อ
     socket.on('disconnect', () => {
-        console.log('User disconnected: ' + (socket.username || socket.id));
-        connectedUser = connectedUser.filter(item => item !== socket.username)
-        io.emit('updateuser', connectedUser)
+        console.log('User Disconnected: ' + (socket.user.email || socket.id));
+        UpdateStatus(socket.id, userid, 'offline')
+        socket.broadcast.emit(('isUserOffline'), { userid, socketid: socket.id })
     });
 });
 
 
-// เก็บข้อมูลผู้ใช้ (เช่น ชื่อผู้ใช้) โดยใช้ socket.id เป็น key
-// socket.on('set username', (username) => {
-//     users[socket.id] = username;
-//     console.log(users);
-// });
-
-// socket.on('private message', (data) => {
-//     const { to, message } = data;
-
-//     // ค้นหาว่าผู้ใช้ปลายทางมี socket.id อะไร
-//     for (let socketId in users) {
-//         if (users[socketId] === to) {
-//             // ส่งข้อความไปยังผู้ใช้ที่ถูกต้อง
-//             io.to(socketId).emit('private message', {
-//                 from: users[socket.id],
-//                 message: message
-//             });
-
-//             // ส่งข้อความให้กับผู้ส่งเองด้วย
-//             io.to(socket.id).emit('private message', {
-//                 from: users[socket.id],
-//                 message: message
-//             });
-//             break;
-//         }
-//     }
-// });

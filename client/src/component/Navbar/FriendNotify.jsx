@@ -2,10 +2,12 @@ import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useDispatch, useSelector } from 'react-redux';
-import { GetcurrentRequest } from '../../Reducers/userSlice';
+import { GetcurrentRequest, updateNewRequest } from '../../Reducers/userSlice';
+import { useSocket } from '../../SocketContext';
 
 const FriendNotify = () => {
     const dispatch = useDispatch()
+    const { socket } = useSocket()
     const token = useSelector(state => state.auth.token)
     const currentRequest = useSelector(state => state.user.currentRequest)
 
@@ -16,6 +18,22 @@ const FriendNotify = () => {
         FetchData()
     }, [dispatch])
 
+
+    useEffect(() => {
+        if (socket) {
+            const handleNewRequest = (data) => {
+                dispatch(updateNewRequest(data));
+            };
+
+
+            socket.on('newRequest', handleNewRequest);
+
+            // Cleanup function to unsubscribe when token changes or on component unmount
+            return () => {
+                socket.off('newRequest', handleNewRequest); // Remove only the handler for 'newRequest'
+            };
+        }
+    }, [token])
 
 
     return (

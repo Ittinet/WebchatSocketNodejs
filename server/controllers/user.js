@@ -3,6 +3,15 @@ const jwt = require('jsonwebtoken')
 const io = require('../server')
 const { User, FriendRequest, Friendship } = require('../models/Schema')
 const { default: mongoose } = require('mongoose')
+const cloudinary = require('cloudinary').v2
+require('dotenv').config
+
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+})
+
 
 exports.GetUser = async (req, res) => {
     try {
@@ -114,15 +123,18 @@ exports.AddFriend = async (req, res) => {
 
 
 
-        const newRequest = new FriendRequest({
+        const newRequestRef = new FriendRequest({
             sender: senderId,
             receiver: receiverId,
             status: "pending"
         })
 
-        await newRequest.save()
+        await newRequestRef.save()
+
+        const newRequest = await FriendRequest.findById(newRequestRef._id).populate('receiver', '-password').populate('sender', '-password')
         res.status(200).json({
-            message: "ok"
+            message: "ok",
+            newRequest: newRequest
         })
 
     } catch (error) {
@@ -275,7 +287,7 @@ exports.GetFirend = async (req, res) => {
                 },
                 { status: 'accepted' }
             ]
-        }).sort({ createdAt: -1 }).populate('user1 user2')
+        }).sort({ createdAt: -1 }).populate('user1 user2', '-password -role')
 
         if (friendData.length <= 0) {
             return res.status(200).json({
@@ -431,5 +443,50 @@ exports.CancleRequest = async (req, res) => {
         })
     }
     // ทำต่อให้เสร็จ
+}
+
+
+exports.AddProFile = async (req, res) => {
+    try {
+        const { image, imagecropped } = req.body
+        const userid = req.user.user_id
+
+        const resultImage = await cloudinary.uploader.upload(image, {
+            public_id: `User-${userid}`,
+            resource_type: 'auto',
+            folder: "ChatApp01-Profile",
+            overwrite: true
+        })
+
+        const resultImageCropped = await cloudinary.uploader.upload(imagecropped, {
+            public_id: `User-Crop-${userid}`,
+            resource_type: 'auto',
+            folder: "ChatApp01-Profile",
+            overwrite: true
+        })
+
+        if (resultImage || resultImageCropped) {
+            const UpdataProfile = await User.findByIdAndUpdate({ _id: userid }, {
+                $set: {
+                    profile_picture: resultImage.url,
+                    profile_cropped: resultImageCropped.url
+
+                }
+            }, { new: true })
+        }
+
+        // const imageurl = await cloudinary.url(`ChatApp01-Profile/User-${userid}`) //การ Get รูปภาพจาก publicId
+
+        res.status(200).json({
+            message: 'Update Profile Success',
+            resultImage,
+            resultImageCropped
+        })
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({
+            message: 'Server Error'
+        })
+    }
 }
 

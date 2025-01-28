@@ -1,23 +1,31 @@
-import axios from 'axios'
 import { Ellipsis, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { GetcurrentFriend } from '../Reducers/userSlice'
+import { AddChat } from '../Reducers/chatSlice'
+import { useSocket } from '../SocketContext'
 
 const FriendChat = () => {
-    const [OpenChat, setOpenChat] = useState(false)
-
+    const { socket } = useSocket()
     const dispatch = useDispatch()
     const token = useSelector(state => state.auth.token)
     const currentFriend = useSelector(state => state.user.currentFriend)
+    console.log('currentFriend', currentFriend)
 
     useEffect(() => {
         dispatch(GetcurrentFriend(token))
     }, [])
 
 
-    const handleOpenChat = () => {
+    useEffect(() => {
+        socket.on('NotityfyChat', (senderData) => {
+            dispatch(AddChat(senderData))
 
+        })
+    })
+
+    const handleOpenChat = (data) => {
+        dispatch(AddChat(data))
     }
 
     return (
@@ -34,17 +42,20 @@ const FriendChat = () => {
                 <div>
                     {
                         currentFriend.length > 0 && currentFriend.map((item, index) =>
-                            <div key={index} onClick={handleOpenChat} className='mt-3 py-2 px-2 hover:bg-[#f8e6e6] cursor-pointer rounded-lg'>
+                            <div key={index} onClick={() => handleOpenChat(item)} className='mt-3 py-2 px-2 hover:bg-[#f8e6e6] cursor-pointer rounded-lg'>
                                 <div className='flex items-center gap-4'>
-                                    <div className='max-w-9 relative'>
-                                        <img src={item.profile_picture} alt="" />
-                                        {
-                                            item.status === "online"
-                                                ? <div className='bg-green-400 border-black absolute w-2 h-2 rounded-full right-0 bottom-0'></div>
-                                                : ""
-                                        }
+                                    <div className='relative'>
+                                        <div className='w-10 h-10 rounded-full overflow-hidden flex items-center justify-center'>
+                                            <img className='object-cover' src={item.profile_cropped} alt="" />
+                                            {
+                                                item.status === "online"
+                                                    ? <div className='bg-green-400 border-black absolute w-2 h-2 rounded-full right-0 bottom-0'></div>
+                                                    : ""
+                                            }
 
+                                        </div>
                                     </div>
+
                                     <div>
                                         <p className='font-bold'>{item.username}</p>
                                     </div>

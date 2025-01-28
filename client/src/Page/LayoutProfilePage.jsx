@@ -1,8 +1,13 @@
 import { Outlet } from "react-router-dom"
 import Navbar from "../component/Navbar"
+import LayoutEditImage from "../component/ImageProfile/LayoutEditImage"
+import { useState } from "react"
+import { useSelector } from "react-redux"
 
 
 const LayoutProfilePage = () => {
+    const isOpenEditImage = useSelector((state => state.user.isOpenEditImage))
+
     return (
         <div className="relative">
             {/* Navbar */}
@@ -14,6 +19,9 @@ const LayoutProfilePage = () => {
             <div className="max-w-[1200px] mx-auto mt-10">
                 <Outlet />
             </div>
+
+            
+
         </div>
     )
 }

@@ -12,8 +12,8 @@ exports.checkUser = async (req, res, next) => {
         const token = tokenHeaders.split(" ")[1]
 
         const checktoken = jwt.verify(token, process.env.JWT_SECRET_KEY)
-        console.log('Middleware CheckUser')
-        console.log(checktoken)
+        // console.log('Middleware CheckUser')
+        // console.log(checktoken)
         req.user = checktoken
         next()
 

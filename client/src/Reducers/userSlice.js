@@ -1,4 +1,4 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, current } from "@reduxjs/toolkit";
 import axios from "axios";
 
 
@@ -80,7 +80,7 @@ const initialState = {
     currentuser: null,
     currentFriend: [],
     currentRequest: [],
-    users: [],
+    isOpenEditImage: false,
     loading: false,
     error: null,
 }
@@ -88,6 +88,40 @@ const initialState = {
 export const userSlice = createSlice({
     name: 'user',
     initialState: initialState,
+    reducers: {
+        updateOnlineStatus: (state, action) => {
+            const { userid, socketid } = action.payload
+            state.currentFriend = state.currentFriend.map((item) => item._id === userid
+                ? {
+                    ...item,
+                    status: 'online',
+                    socketId: socketid,
+                    last_active: null
+                }
+                : item)
+        },
+        updateOfflineStatus: (state, action) => {
+            const { userid, socketid } = action.payload
+            state.currentFriend = state.currentFriend.map((item) => item._id === userid
+                ? {
+                    ...item,
+                    status: 'offline',
+                    socketId: null,
+                    last_active: new Date().toISOString()
+                }
+                : item)
+        },
+        updateNewRequest: (state, action) => {
+            state.currentRequest = [action.payload]
+        },
+        updateProfileImage: (state, action) => {
+            state.currentuser = { ...state.currentuser, profile_picture: action.payload.image, profile_cropped: action.payload.imagecropped }
+        },
+        OpenEditImage: (state, action) => {
+            state.isOpenEditImage = action.payload
+        }
+
+    },
     extraReducers: (builder) => {
         builder
             .addMatcher(
@@ -124,6 +158,8 @@ export const userSlice = createSlice({
     }
 
 })
+
+export const { updateOnlineStatus, updateOfflineStatus, updateNewRequest, OpenEditImage, updateProfileImage } = userSlice.actions;
 
 export default userSlice.reducer;
 

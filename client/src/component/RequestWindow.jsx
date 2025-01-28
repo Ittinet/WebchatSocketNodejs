@@ -1,7 +1,7 @@
 import { X } from "lucide-react"
 import { useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
-import { AcceptFriend, GetcurrentRequest, RejectFriend } from "../Reducers/userSlice"
+import { AcceptFriend, GetcurrentFriend,GetcurrentRequest, RejectFriend } from "../Reducers/userSlice"
 import { differenceInDays, differenceInHours, differenceInMinutes, differenceInMonths, differenceInSeconds, differenceInYears } from 'date-fns'
 import axios from "axios"
 
@@ -45,10 +45,15 @@ const RequestWindow = ({ OpenMenu, setOpenMenu }) => {
         return 'เมื่อสักครู่'; // กรณีที่น้อยกว่า 1 วินาที
     };
 
+    const handleAccept = async ({ token, id }) => {
+        try {
+            await dispatch(AcceptFriend({ token, id }))
+            await dispatch(GetcurrentFriend(token))
+        } catch (error) {
+            console.log(error)
+        }
+    }
 
-
-
-    console.log('currentRequest', currentRequest)
 
     useEffect(() => {
         dispatch(GetcurrentRequest(token))
@@ -84,7 +89,7 @@ const RequestWindow = ({ OpenMenu, setOpenMenu }) => {
                                             <p className="text-md text-gray-600">{timeAgo(item.timestamp)}</p>
                                         </div>
                                         <div className="flex gap-2  justify-center">
-                                            <button onClick={() => dispatch(AcceptFriend({ token, id: item.sender._id }))} className="bg-[#e8d0fd] hover:bg-[#ccb5e0] text-gray-600 py-3 px-5 rounded-xl ">ยืนยัน</button>
+                                            <button onClick={() => handleAccept({ token, id: item.sender._id })} className="bg-[#e8d0fd] hover:bg-[#ccb5e0] text-gray-600 py-3 px-5 rounded-xl ">ยืนยัน</button>
                                             <button onClick={() => dispatch(RejectFriend({ token, id: item.sender._id }))} className="bg-[#e1d5eb] hover:bg-[#ccb5e0] text-gray-600 py-1 px-5 rounded-xl ">ลบ</button>
                                         </div>
                                     </div>

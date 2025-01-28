@@ -25,6 +25,11 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: 'https://firebasestorage.googleapis.com/v0/b/projectwtelogin-b9a23.appspot.com/o/1458201.png?alt=media&token=bde36c76-5b9f-4ca9-a9ae-39fa484203bc'
     },
+    profile_cropped: {
+        type: String,
+        default: 'https://firebasestorage.googleapis.com/v0/b/projectwtelogin-b9a23.appspot.com/o/1458201.png?alt=media&token=bde36c76-5b9f-4ca9-a9ae-39fa484203bc'
+
+    },
     role: {
         type: String,
         default: "user"
@@ -51,7 +56,12 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: false
-    }]
+    }],
+    socketId: {
+        type: String,
+        default: null,
+        require: false
+    }
 })
 
 const friendRequestSchema = new mongoose.Schema({
@@ -107,7 +117,7 @@ const messageSchema = new mongoose.Schema({
         type: String,
         require: true
     },
-    timestamp: { type: Date, default: Date.now },
+    createAt: { type: Date, default: Date.now },
     readByReceiver: {
         type: Boolean, default: false
     }

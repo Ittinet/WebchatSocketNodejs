@@ -5,15 +5,18 @@ import { Outlet } from "react-router-dom";
 import Chatwindow from "../component/Chatwindow";
 import RequestWindow from "../component/RequestWindow";
 import { useState } from "react";
+import { useSelector } from "react-redux";
 
 const App = () => {
     const [isOpenRequestMenu, setIsOpenRequestMenu] = useState(false)
+
+    const activeChats = useSelector(state => state.chat.activeChats)
 
     return (
         <div className="relative">
             {/* Navbar */}
             <div className="sticky top-0 z-[80] drop-shadow-md">
-                <Navbar setOpenMenu={setIsOpenRequestMenu} />
+                <Navbar OpenMenu={isOpenRequestMenu} setOpenMenu={setIsOpenRequestMenu} />
             </div>
 
             {/* Body */}
@@ -43,7 +46,19 @@ const App = () => {
             <RequestWindow OpenMenu={isOpenRequestMenu} setOpenMenu={setIsOpenRequestMenu} />
 
             {/* Chatwindow */}
-            {/* <Chatwindow /> */}
+            <div className='fixed bottom-0 right-5'>
+                <div className="flex gap-3 flex-row-reverse">
+                    {
+                        activeChats.length > 0 && activeChats.map((item, index) => (
+                            <div key={index}>
+                                <Chatwindow chatData={item} />
+                            </div>
+
+                        ))
+                    }
+                </div>
+            </div>
+
         </div>
     );
 };

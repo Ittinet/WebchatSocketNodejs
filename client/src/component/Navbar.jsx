@@ -9,7 +9,7 @@ import FriendNotify from './Navbar/FriendNotify'
 import { useDispatch, useSelector } from 'react-redux'
 import { Getcurrentuser } from '../Reducers/userSlice'
 
-const Navbar = ({ setOpenMenu }) => {
+const Navbar = ({ OpenMenu, setOpenMenu }) => {
     // const CurrentUser = useDataStore(state => state.CurrentUserData)
     // const GetCurrentUser = useDataStore(state => state.getCurrentUserData)
     // const token = useAuthStore(state => state.token)
@@ -17,12 +17,14 @@ const Navbar = ({ setOpenMenu }) => {
 
     const CurrentUser = useSelector(state => state.user.currentuser)
     const token = useSelector(state => state.auth.token)
+    const currentFriend = useSelector(state => state.user.currentFriend)
 
     const [OpenChat, setOpenChat] = useState(false)
     const [SearchQuery, setSearchQuery] = useState('')
     const [FriendSearch, setFriendSearch] = useState([])
 
     const searchRef = useRef(null)
+
 
     useEffect(() => {
         dispatch(Getcurrentuser(token))
@@ -131,13 +133,15 @@ const Navbar = ({ setOpenMenu }) => {
                                     FriendSearch.map((item, index) =>
                                         <Link onClick={() => setOpenChat(false)} to={`/profile/${item._id}`} key={index} className='flex px-3 py-2 gap-4 items-center hover:bg-[#ded2e9]'>
                                             <div>
-                                                <div className='w-12 h-12 rounded-full overflow-hidden'>
-                                                    <img src={item.profile_picture} alt="" />
+                                                <div className='w-12 h-12 rounded-full flex items-center justify-center overflow-hidden'>
+                                                    <img className='object-cover' src={item.profile_cropped} alt="" />
                                                 </div>
                                             </div>
                                             <div>
                                                 <p className='text-md font-bold'>{item.username}</p>
-                                                <p className='text-sm text-gray-600'>เพื่อน</p>
+                                                {
+                                                    currentFriend.some(friend => friend._id === item._id) ? <p className='text-sm text-gray-600'>เพื่อน</p> : ''
+                                                }
                                             </div>
                                         </Link>
                                     )
@@ -181,8 +185,8 @@ const Navbar = ({ setOpenMenu }) => {
                         </div>
 
                         {/* Account */}
-                        <div className="max-w-10">
-                            <img src={CurrentUser?.profile_picture} alt="" />
+                        <div className="w-11 h-11 rounded-full overflow-hidden flex items-center justify-center">
+                            <img className='object-cover' src={CurrentUser?.profile_cropped} alt="" />
                         </div>
 
                     </div>
