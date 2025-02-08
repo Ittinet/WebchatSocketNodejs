@@ -5,7 +5,7 @@ import Loading from '../component/Loading'
 import { useDispatch, useSelector } from 'react-redux'
 import { io } from 'socket.io-client'
 import { useSocket } from '../SocketContext'
-import { updateOfflineStatus, updateOnlineStatus } from '../Reducers/userSlice'
+import { GetcurrentFriend, updateOfflineStatus, updateOnlineStatus } from '../Reducers/userSlice'
 import { UpdateChatIsOffline, UpdateChatIsOnline } from '../Reducers/chatSlice'
 
 const Checkauth = ({ element }) => {
@@ -45,9 +45,12 @@ const Checkauth = ({ element }) => {
             })
 
             socketInstance.on('connect', () => {
+                console.log("Connected with socket id", socketInstance.id)
                 connectSocket(socketInstance)
                 setIsSocketConnected(true)
                 socketInstance.emit('updateStatus', { userid: user.user_id, socketid: socketInstance.id })
+                dispatch(GetcurrentFriend(token))
+
             })
 
             socketInstance.on('connect_error', (error) => {
@@ -59,6 +62,7 @@ const Checkauth = ({ element }) => {
             socketInstance.on('isUserOnline', ({ userid, socketid }) => {
                 dispatch(updateOnlineStatus({ userid, socketid }))
                 dispatch(UpdateChatIsOnline({ userid, socketid }))
+                console.log('restart', socketid)
             })
 
             //อัพเดท Status เมื่อ Offline อัพเดทตั้งข้อมูลแชท และข้อมูลเพื่อน
@@ -73,7 +77,7 @@ const Checkauth = ({ element }) => {
             }
 
         }
-    }, [checkuser, token])
+    }, [checkuser, token, user])
 
 
 

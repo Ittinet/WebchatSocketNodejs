@@ -9,7 +9,7 @@ import FriendNotify from './Navbar/FriendNotify'
 import { useDispatch, useSelector } from 'react-redux'
 import { Getcurrentuser } from '../Reducers/userSlice'
 
-const Navbar = ({ OpenMenu, setOpenMenu }) => {
+const Navbar = ({ handleOpenMenu, MessageWindowRef, RequestWindowRef }) => {
     // const CurrentUser = useDataStore(state => state.CurrentUserData)
     // const GetCurrentUser = useDataStore(state => state.getCurrentUserData)
     // const token = useAuthStore(state => state.token)
@@ -73,7 +73,7 @@ const Navbar = ({ OpenMenu, setOpenMenu }) => {
 
     return (
         <div>
-            <nav className="bg-[#ffd4d7] py-2 relative z-70 flex justify-center items-center">
+            <nav className="bg-[#ffd8da] py-2 relative z-70 flex justify-center items-center">
 
                 {/* MenuMain */}
                 <div className="flex items-center" >
@@ -131,7 +131,7 @@ const Navbar = ({ OpenMenu, setOpenMenu }) => {
                                 {
                                     (FriendSearch.length > 0 && OpenChat) &&
                                     FriendSearch.map((item, index) =>
-                                        <Link onClick={() => setOpenChat(false)} to={`/profile/${item._id}`} key={index} className='flex px-3 py-2 gap-4 items-center hover:bg-[#ded2e9]'>
+                                        <Link onClick={() => setOpenChat(false)} to={`/${item._id}`} key={index} className='flex px-3 py-2 gap-4 items-center hover:bg-[#ded2e9]'>
                                             <div>
                                                 <div className='w-12 h-12 rounded-full flex items-center justify-center overflow-hidden'>
                                                     <img className='object-cover' src={item.profile_cropped} alt="" />
@@ -163,13 +163,13 @@ const Navbar = ({ OpenMenu, setOpenMenu }) => {
                     <div className="flex justify-center items-center gap-5">
 
                         {/* Friend */}
-                        <div onClick={() => setOpenMenu(true)}>
+                        <div ref={RequestWindowRef} onClick={() => handleOpenMenu('RequestWindow')}>
                             <FriendNotify />
                         </div>
 
 
                         {/* Message */}
-                        <div className='relative'>
+                        <div ref={MessageWindowRef} onClick={() => handleOpenMenu('MessageWindow')} className='relative'>
                             <button className="bg-[#e7b9b9] p-2.5 rounded-full">
                                 <QuestionAnswerIcon size={25} className='text-white' />
                             </button>

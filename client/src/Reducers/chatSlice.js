@@ -1,4 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
+import axios from "axios"
 
 
 // export const Addchat = createAsyncThunk('chat/Addchat', (chatData, { rejectWithValue }) => {
@@ -10,8 +11,25 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
 //     }
 // })
 
+
+export const GetLastMessage = createAsyncThunk('chat/GetLastMessage', async (token, { rejectWithValue }) => {
+    try {
+        const res = await axios.get('http://localhost:8000/api/message', {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        })
+        return res.data.LastMessages
+    } catch (error) {
+        console.log(error)
+        return rejectWithValue(error.response?.data?.message || 'เกิดข้อผิดพลาดในการดึงข้อมูลแชทล่าสุด')
+    }
+})
+
 const initialState = {
     activeChats: [],
+    MessageData: [],
+    LastMessage: [],
     loading: false,
     error: null,
 }
@@ -58,32 +76,32 @@ export const chatSlice = createSlice({
             state.activeChats = state.activeChats.filter((item) => item._id !== userid)
         }
     },
-    // extraReducers: (builder) => {
-    //     builder
-    //         .addMatcher(
-    //             (action) => action.type.endsWith('/pending'),
-    //             (state, action) => {
-    //                 state.loading = true
-    //                 state.error = null
-    //             }
-    //         )
-    //         .addMatcher(
-    //             (action) => action.type.endsWith('/rejected'),
-    //             (state, action) => {
-    //                 state.loading = false
-    //                 state.error = action.payload
-    //             }
-    //         )
-    //         .addMatcher(
-    //             (action) => action.type.endsWith('/fulfilled'),
-    //             (state, action) => {
-    //                 state.loading = false
-    //                 if (action.type.includes('/Addchat')) {
-    //                     state.activeChats = action.payload
-    //                 }
-    //             }
-    //         )
-    // }
+    extraReducers: (builder) => {
+        builder
+            .addMatcher(
+                (action) => action.type.endsWith('/pending'),
+                (state, action) => {
+                    state.loading = true
+                    state.error = null
+                }
+            )
+            .addMatcher(
+                (action) => action.type.endsWith('/rejected'),
+                (state, action) => {
+                    state.loading = false
+                    state.error = action.payload
+                }
+            )
+            .addMatcher(
+                (action) => action.type.endsWith('/fulfilled'),
+                (state, action) => {
+                    state.loading = false
+                    if (action.type.includes('/GetLastMessage')) {
+                        state.LastMessage = action.payload
+                    }
+                }
+            )
+    }
 
 })
 

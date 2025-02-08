@@ -92,7 +92,7 @@ const UpdateStatus = async (socketid, id, status) => {
 
 io.on('connection', (socket) => {
     const userid = socket.user.user_id
-    console.log('User Connected: ' + socket.user.email)
+    console.log('User Connected: ' + socket.user.email + ' ' + socket.id)
 
     UpdateStatus(socket.id, userid, 'online')
 

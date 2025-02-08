@@ -1,16 +1,31 @@
 import { X } from "lucide-react"
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { useDispatch, useSelector } from "react-redux"
-import { AcceptFriend, GetcurrentFriend,GetcurrentRequest, RejectFriend } from "../Reducers/userSlice"
+import { AcceptFriend, GetcurrentFriend, GetcurrentRequest, RejectFriend } from "../Reducers/userSlice"
 import { differenceInDays, differenceInHours, differenceInMinutes, differenceInMonths, differenceInSeconds, differenceInYears } from 'date-fns'
-import axios from "axios"
 
 
-const RequestWindow = ({ OpenMenu, setOpenMenu }) => {
+const RequestWindow = ({ RequestWindowRef, setMenuWindow }) => {
     const dispatch = useDispatch()
 
     const token = useSelector(state => state.auth.token)
     const currentRequest = useSelector(state => state.user.currentRequest)
+
+    const componentRef = useRef(null)
+
+    useEffect(() => {
+        const handleClickOutSide = (e) => {
+            if (componentRef.current && RequestWindowRef.current && !componentRef.current.contains(e.target) && !RequestWindowRef.current.contains(e.target)) {
+                setMenuWindow('close')
+            }
+        }
+
+        document.addEventListener('mousedown', handleClickOutSide)
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutSide)
+        }
+    }, [])
 
     const timeAgo = (createdAt) => {
         const now = new Date();
@@ -60,13 +75,14 @@ const RequestWindow = ({ OpenMenu, setOpenMenu }) => {
     }, [dispatch])
 
     return (
-        <div className={`fixed z-[90] top-0 right-0 shadow-md duration-700 transition-all ${OpenMenu ? 'translate-x-0' : 'translate-x-full'} `}>
-            <div className="w-[400px] h-[100vh] bg-[#f5ebfd]">
+
+        <div ref={componentRef} className={`fixed z-[90] top-[65px] right-[5px] shadow-md duration-700 transition-all`}>
+            <div className="w-[380px] h-[calc(100vh-70px)] rounded-xl overflow-hidden bg-[#ede7ff]">
                 {/* Header */}
-                <div className="bg-[#e1bffd]">
+                <div className="bg-[#ecd6ff]">
                     <div className="flex justify-between items-center px-2 py-2">
                         <p className="font-bold text-xl text-gray-600 px-2 py-3">คำขอเป็นเพื่อน</p>
-                        <button onClick={() => setOpenMenu(false)} className="hover:bg-[#d0aedd] rounded-full p-1.5">
+                        <button className="hover:bg-[#d0aedd] rounded-full p-1.5">
                             <X className="text-gray-600" />
                         </button>
                     </div>
@@ -103,7 +119,7 @@ const RequestWindow = ({ OpenMenu, setOpenMenu }) => {
                 </div>
 
             </div>
-        </div>
+        </div >
     )
 }
 

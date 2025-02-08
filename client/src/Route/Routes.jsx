@@ -5,7 +5,6 @@ import MainPage from '../Page/MainPage'
 import Home from '../Page/SubPage/Home'
 import ReelsPage from '../Page/SubPage/ReelsPage'
 import ProfileUser from '../Page/SubPage/ProfileUser'
-import LayoutProfilePage from '../Page/LayoutProfilePage'
 
 
 
@@ -16,13 +15,6 @@ const router = createBrowserRouter([
         children: [
             { index: true, element: < Home /> },
             { path: 'reels', element: <ReelsPage /> },
-            { path: ':id', element: <ProfileUser /> }
-        ]
-    },
-    {
-        path: '/profile',
-        element: <Checkauth element={<LayoutProfilePage />} />,
-        children: [
             { path: ':id', element: <ProfileUser /> }
         ]
     },

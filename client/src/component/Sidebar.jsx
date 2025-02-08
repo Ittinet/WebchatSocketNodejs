@@ -10,7 +10,6 @@ const Sidebar = () => {
     const CurrentUser = useSelector(state => state.user.currentuser)
     const token = useSelector(state => state.auth.token)
 
-    console.log(CurrentUser)
 
     const dispatch = useDispatch()
 
@@ -22,7 +21,7 @@ const Sidebar = () => {
         <div className=" py-5 px-2 flex flex-col gap-2">
             {
                 CurrentUser &&
-                <Link to={`/profile/${CurrentUser._id}`} className="flex items-center gap-3 border-b py-3 px-5 hover:bg-[#f8e6e6] cursor-pointer rounded-lg">
+                <Link to={`/${CurrentUser._id}`} className="flex items-center gap-3 border-b py-3 px-5 hover:bg-[#f8e6e6] cursor-pointer rounded-lg">
                     <div className="w-14 h-14 rounded-full overflow-hidden flex justify-center items-center">
                         <img className="object-cover" src={CurrentUser?.profile_cropped} alt="" />
                     </div>

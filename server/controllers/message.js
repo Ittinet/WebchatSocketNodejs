@@ -40,8 +40,7 @@ exports.SentMessage = async (req, res) => {
 
         res.status(200).json({
             message: "Message Sent Succesfully",
-            datamessage: CreateMessage,
-            datamessagetest: datamessage
+            datamessage: datamessage
         })
 
 
@@ -80,7 +79,7 @@ exports.GetMessage = async (req, res) => {
                 { sender: senderId, receiver: receiverId },
                 { sender: receiverId, receiver: senderId }
             ]
-        }).sort({ createAt: 1 })
+        }).populate('sender', '-password').sort({ createAt: 1 })
 
         res.status(200).json({
             message: message
@@ -94,3 +93,68 @@ exports.GetMessage = async (req, res) => {
         })
     }
 }
+
+exports.GetLastMessage = async (req, res) => {
+    try {
+        const currentid = new mongoose.Types.ObjectId(req.user.user_id)
+        const GroupMessages = await Message.aggregate([
+            {
+                $match: {
+                    $or: [
+                        { sender: currentid },
+                        { receiver: currentid }
+                    ]
+                }
+            },
+            {
+                $addFields: {
+                    chatgroup: {
+                        $cond: {
+                            if: { $lt: [{ $toObjectId: "$sender" }, { $toObjectId: "$receiver" }] },
+                            then: { $concat: [{ $toString: "$sender" }, "-", { $toString: "$receiver" }] },
+                            else: { $concat: [{ $toString: "$receiver" }, "-", { $toString: "$sender" }] }
+                        }
+                    }
+                }
+            },
+            { $sort: { "createAt": 1 } },
+            {
+                $group: {
+                    _id: "$chatgroup",
+                    messages: { $last: "$$ROOT" },
+                }
+            },
+            { $sort: { "messages.createAt": -1 } },
+        ]);
+
+
+        const populatedMessages = await Message.populate(GroupMessages, [
+            { path: 'messages.sender', model: 'User', select: '-password' },
+            { path: 'messages.receiver', model: 'User', select: '-password' }
+        ]);
+
+        const updateMessages = populatedMessages.map((item) => {
+            if (item.messages.receiver === currentid) {
+                const updateData = { ...item, messages: { ...item.messages, targetuser: item.messages.sender } }
+                return updateData
+            } else {
+                const updateData = { ...item, messages: { ...item.messages, targetuser: item.messages.receiver } }
+                return updateData
+            }
+        })
+
+
+        res.status(200).json({
+            LastMessages: updateMessages,
+        })
+
+
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({
+            message: error.message
+        })
+    }
+}
+
+

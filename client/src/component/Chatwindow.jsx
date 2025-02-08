@@ -15,7 +15,7 @@ const Chatwindow = ({ chatData }) => {
     const dispatch = useDispatch()
     const MessageScrollRef = useRef()
 
-    // console.log('chatdata', chatData)
+
 
     const token = useSelector(state => state.auth.token)
     const user = useSelector(state => state.auth.user)
@@ -25,17 +25,20 @@ const Chatwindow = ({ chatData }) => {
     const [MessageInput, setMessageInput] = useState('')
     const [MessageData, setMessageData] = useState([])
 
-    console.log('chatdata', chatData)
+    // console.log('chatdata', chatData)
 
     useEffect(() => {
         socket.on('NewMessage', (data) => {
-            console.log('data', data)
+            // console.log('data', data)
             if (data.sender._id === chatData._id) {
-                setMessageData((prev) => [...prev, data])
+                setMessageData((prev) => {
+                    if (!prev.some(item => item._id === data._id)) {
+                        return [...prev, data]
+                    }
+                    return prev
+                })
             }
-
         })
-
     }, [])
 
     // console.log('testDate', new Date())
@@ -55,24 +58,14 @@ const Chatwindow = ({ chatData }) => {
                     Authorization: `Bearer ${token}`
                 }
             })
-            // console.log('datamessage', res.data.datamessage)
-            // console.log('datamaessagetest', res.data.datamessagetest)
+            console.log('chatdata', chatData)
+            console.log('datamessage', res.data.datamessage)
 
-            const datamessage = res.data.datamessage
 
             socket.emit('SentMessage', {
-                ...res.data.datamessagetest,
+                ...res.data.datamessage,
                 socketid: chatData.socketId
             })
-
-            // socket.emit('SentMessage', {
-            //     sender: res.data.datamessage.sender,
-            //     receiver: chatData._id,
-            //     messageContent: MessageInput,
-            //     createAt: new Date().toISOString(),
-            //     readByReceiver: false,
-            //     socketid: chatData.socketId
-            // })
 
             setMessageInput('')
             setMessageData((prev) => [...prev, res.data.datamessage])
@@ -96,6 +89,7 @@ const Chatwindow = ({ chatData }) => {
                     Authorization: `Bearer ${token}`
                 }
             })
+            // console.log(res.data.message)
             setMessageData(res.data.message)
         } catch (error) {
             console.log(error)
@@ -292,10 +286,10 @@ const Chatwindow = ({ chatData }) => {
                                                 {
                                                     showTime && <div className='w-full flex items-center justify-center my-5 text-[12px] font-bold text-gray-600'>{showTime}</div>
                                                 }
-                                                <div className={`flex gap-1 ${item.sender === user.user_id ? 'flex-row-reverse' : ''}`}>
+                                                <div className={`flex gap-1 ${item.sender._id === user.user_id ? 'flex-row-reverse' : ''}`}>
                                                     <div className='p-1'>
                                                         {
-                                                            item.sender !== user.user_id
+                                                            item.sender._id !== user.user_id
                                                                 ? <div className='w-9 h-9 flex justify-center items-center  rounded-full overflow-hidden'>
                                                                     <img className='object-cover' src={chatData.profile_cropped} alt="" />
                                                                 </div>
@@ -306,7 +300,7 @@ const Chatwindow = ({ chatData }) => {
 
                                                     <div className='max-w-[250px] break-words'>
                                                         <div className='flex relative group'>
-                                                            <div className={`${item.sender === user.user_id ? 'bg-[#f4d7ff]' : 'bg-[#ffffff]'} px-5 py-2 rounded-3xl`}>
+                                                            <div className={`${item.sender._id === user.user_id ? 'bg-[#f4d7ff]' : 'bg-[#ffffff]'} px-5 py-2 rounded-3xl`}>
                                                                 <p className=''>{item.messageContent}</p>
                                                             </div>
                                                             <span className='text-[12px] opacity-90 bg-white px-2 py-2 rounded-md text-nowrap z-50 absolute left-[-30px] top-10 hidden group-hover:block'>{ShowTitleTime(item.createAt)}</span>

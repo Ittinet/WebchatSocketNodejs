@@ -10,7 +10,6 @@ const FriendChat = () => {
     const dispatch = useDispatch()
     const token = useSelector(state => state.auth.token)
     const currentFriend = useSelector(state => state.user.currentFriend)
-    console.log('currentFriend', currentFriend)
 
     useEffect(() => {
         dispatch(GetcurrentFriend(token))
