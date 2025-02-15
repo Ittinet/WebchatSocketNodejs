@@ -1,17 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
 import axios from "axios"
 
-
-// export const Addchat = createAsyncThunk('chat/Addchat', (chatData, { rejectWithValue }) => {
-//     try {
-//         console.log('test')
-//     } catch (error) {
-//         console.log(error)
-//         return rejectWithValue(error.response?.data?.message || 'เกิดข้อผิดพลาดบางอย่างในจัดการช่องแชท')
-//     }
-// })
-
-
 export const GetLastMessage = createAsyncThunk('chat/GetLastMessage', async (token, { rejectWithValue }) => {
     try {
         const res = await axios.get('http://localhost:8000/api/message', {
@@ -23,6 +12,24 @@ export const GetLastMessage = createAsyncThunk('chat/GetLastMessage', async (tok
     } catch (error) {
         console.log(error)
         return rejectWithValue(error.response?.data?.message || 'เกิดข้อผิดพลาดในการดึงข้อมูลแชทล่าสุด')
+    }
+})
+
+export const ReadMessage = createAsyncThunk('chat/ReadMessage', async ({ token, targetuser }, { rejectWithValue }) => {
+    try {
+        const res = await axios.patch(`http://localhost:8000/api/message/read/${targetuser}`, {}, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        })
+        console.log(res.data)
+        return {
+            data: res.data.message,
+            targetuser: targetuser
+        }
+    } catch (error) {
+        console.log(error)
+        return rejectWithValue(error.response?.data?.message || 'เกิดข้อผิดพลาดในการอัพเดทการอ่านแชท')
     }
 })
 
@@ -74,6 +81,35 @@ export const chatSlice = createSlice({
         ExistChat: (state, action) => {
             const userid = action.payload
             state.activeChats = state.activeChats.filter((item) => item._id !== userid)
+        },
+        UpdateLastMessage: (state, action) => {
+            state.LastMessage = state.LastMessage.map((item) => {
+                if (item.messages.targetuser._id === action.payload.sender._id) {
+                    return {
+                        ...item, messages: {
+                            ...item.messages,
+                            sender: action.payload.sender,
+                            receiver: action.payload.receiver,
+                            messageContent: action.payload.messageContent,
+                            createAt: action.payload.createAt,
+                            readByReceiver: action.payload.readByReceiver
+                        }
+                    }
+                } else if (item.messages.targetuser._id === action.payload.receiver._id) {
+                    return {
+                        ...item, messages: {
+                            ...item.messages,
+                            sender: action.payload.sender,
+                            receiver: action.payload.receiver,
+                            messageContent: action.payload.messageContent,
+                            createAt: action.payload.createAt,
+                            readByReceiver: action.payload.readByReceiver
+                        }
+                    }
+                } else {
+                    return item
+                }
+            })
         }
     },
     extraReducers: (builder) => {
@@ -98,6 +134,17 @@ export const chatSlice = createSlice({
                     state.loading = false
                     if (action.type.includes('/GetLastMessage')) {
                         state.LastMessage = action.payload
+                    } else if (action.type.includes('/ReadMessage')) {
+                        state.LastMessage = state.LastMessage.map((item) => {
+                            if (item.messages.targetuser._id === action.payload.targetuser) {
+                                return { ...item, messages: { ...item.messages, readByReceiver: true } }
+                            }
+                            console.log(action.payload)
+                            return item
+
+                        })
+
+
                     }
                 }
             )
@@ -105,5 +152,5 @@ export const chatSlice = createSlice({
 
 })
 
-export const { AddChat, UpdateChatIsOnline, UpdateChatIsOffline, ExistChat } = chatSlice.actions;
+export const { AddChat, UpdateChatIsOnline, UpdateChatIsOffline, ExistChat, UpdateLastMessage } = chatSlice.actions;
 export default chatSlice.reducer;

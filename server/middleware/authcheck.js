@@ -6,7 +6,8 @@ exports.checkUser = async (req, res, next) => {
         const tokenHeaders = req.headers.authorization
         if (!tokenHeaders) {
             return res.status(401).json({
-                message: 'ไม่พบ Token กรุณา Login'
+                message: 'ไม่พบ Token กรุณา Login',
+                stack: error.stack
             })
         }
         const token = tokenHeaders.split(" ")[1]
@@ -20,7 +21,8 @@ exports.checkUser = async (req, res, next) => {
     } catch (error) {
         console.error(error)
         res.status(500).json({
-            message: "Token Invalid"
+            message: "Token Invalid",
+            stack: error.stack
         })
     }
 }

@@ -2,7 +2,7 @@ import { Ellipsis, Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { GetcurrentFriend } from '../Reducers/userSlice'
-import { AddChat } from '../Reducers/chatSlice'
+import { AddChat, UpdateLastMessage } from '../Reducers/chatSlice'
 import { useSocket } from '../SocketContext'
 
 const FriendChat = () => {
@@ -10,7 +10,7 @@ const FriendChat = () => {
     const dispatch = useDispatch()
     const token = useSelector(state => state.auth.token)
     const currentFriend = useSelector(state => state.user.currentFriend)
-
+    
     useEffect(() => {
         dispatch(GetcurrentFriend(token))
     }, [])
@@ -21,7 +21,10 @@ const FriendChat = () => {
             dispatch(AddChat(senderData))
 
         })
-    })
+        socket.on('NewMessage', (data) => {
+            dispatch(UpdateLastMessage(data))
+        })
+    }, [])
 
     const handleOpenChat = (data) => {
         dispatch(AddChat(data))

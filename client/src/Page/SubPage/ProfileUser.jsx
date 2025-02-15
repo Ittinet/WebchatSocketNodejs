@@ -167,7 +167,6 @@ const ProfileUser = ({ isOpenPopupImage, setIsOpenPopupImage }) => {
 
             socket.emit('AddFriend', {
                 ...res.data.newRequest,
-                socketid: userData.socketId
             })
 
 

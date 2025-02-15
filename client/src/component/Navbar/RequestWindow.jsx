@@ -1,7 +1,7 @@
 import { X } from "lucide-react"
 import { useEffect, useRef } from "react"
 import { useDispatch, useSelector } from "react-redux"
-import { AcceptFriend, GetcurrentFriend, GetcurrentRequest, RejectFriend } from "../Reducers/userSlice"
+import { AcceptFriend, GetcurrentFriend, GetcurrentRequest, RejectFriend } from "../../Reducers/userSlice"
 import { differenceInDays, differenceInHours, differenceInMinutes, differenceInMonths, differenceInSeconds, differenceInYears } from 'date-fns'
 
 

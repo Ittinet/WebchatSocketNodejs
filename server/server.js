@@ -89,39 +89,88 @@ const UpdateStatus = async (socketid, id, status) => {
     }
 }
 
+let userOnline = {}
 
 io.on('connection', (socket) => {
     const userid = socket.user.user_id
     console.log('User Connected: ' + socket.user.email + ' ' + socket.id)
-
     UpdateStatus(socket.id, userid, 'online')
+    userOnline[socket.user.user_id] = socket.id
+    // console.log('useronline', userOnline)
+    // console.log('test', userOnline[socket.user.user_id])
 
     socket.on('updateStatus', ({ userid, socketid }) => {
         socket.broadcast.emit(('isUserOnline'), { userid, socketid })
     })
 
     socket.on('SentMessage', (data) => {
-        const { socketid, ...messagedata } = data;
-        const { sender, ...messagedata1 } = data;
-
-        io.to(socketid).emit('NewMessage', messagedata)
-        io.to(socketid).emit('NotityfyChat', sender)
+        // const { socketid, ...messagedata } = data; //แยก socketid ออก จาก data เพื่อส่งเฉพาะข้อมูลอื่นไป (เปลี่ยนไปใช้อีกวิธีวิธีนี้เลยไม่ได้ใช้แล้ว)
+        io.to(userOnline[data.receiver._id]).emit('NewMessage', data)
+        io.to(userOnline[data.receiver._id]).emit('NotityfyChat', data.sender)
     })
 
     socket.on('AddFriend', (data) => {
-        const { socketid, ...newRequest } = data
-        console.log(newRequest)
-        io.to(socketid).emit('newRequest', newRequest)
+        // const { socketid, ...newRequest } = data
+        console.log('AddFriendData', data)
+        io.to(userOnline[data.receiver._id]).emit('newRequest', data)
     })
+
+    socket.on('ReadMessage', (receiverId) => {
+        io.to(userOnline[receiverId]).emit('ReadByReceiver')
+    })
+
 
 
 
     // เมื่อผู้ใช้ตัดการเชื่อมต่อ
     socket.on('disconnect', () => {
         console.log('User Disconnected: ' + (socket.user.email || socket.id));
+        delete userOnline[socket.user.user_id]
+        console.log('useronline', userOnline)
         UpdateStatus(socket.id, userid, 'offline')
         socket.broadcast.emit(('isUserOffline'), { userid, socketid: socket.id })
     });
 });
 
 
+
+
+// let userOnline = {}
+
+// io.on('connection', (socket) => {
+//     const userid = socket.user.user_id
+//     console.log('User Connected: ' + socket.user.email + ' ' + socket.id)
+//     UpdateStatus(socket.id, userid, 'online')
+//     userOnline[socket.user.user_id] = socket.id
+//     console.log('useronline', userOnline)
+//     console.log('test', userOnline[socket.user.user_id])
+
+//     socket.on('updateStatus', ({ userid, socketid }) => {
+//         socket.broadcast.emit(('isUserOnline'), { userid, socketid })
+//     })
+
+//     socket.on('SentMessage', (data) => {
+//         const { socketid, ...messagedata } = data; //แยก socketid ออก จาก data เพื่อส่งเฉพาะข้อมูลอื่นไป
+
+//         io.to(socketid).emit('NewMessage', messagedata)
+//         io.to(socketid).emit('NotityfyChat', data.sender)
+//     })
+
+//     socket.on('AddFriend', (data) => {
+//         const { socketid, ...newRequest } = data
+//         console.log(newRequest)
+//         io.to(socketid).emit('newRequest', newRequest)
+//     })
+
+
+
+
+//     // เมื่อผู้ใช้ตัดการเชื่อมต่อ
+//     socket.on('disconnect', () => {
+//         console.log('User Disconnected: ' + (socket.user.email || socket.id));
+//         delete userOnline[socket.user.user_id]
+//         console.log('useronline', userOnline)
+//         UpdateStatus(socket.id, userid, 'offline')
+//         socket.broadcast.emit(('isUserOffline'), { userid, socketid: socket.id })
+//     });
+// });

@@ -3,10 +3,10 @@ import FriendChat from "../component/FriendChat";
 import Sidebar from "../component/Sidebar";
 import { Outlet, useParams } from "react-router-dom";
 import Chatwindow from "../component/Chatwindow";
-import RequestWindow from "../component/RequestWindow";
+import RequestWindow from "../component/Navbar/RequestWindow";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import MessageWindow from "../component/MessageWindow";
+import MessageWindow from "../component/Navbar/MessageWindow";
 import { GetLastMessage } from "../Reducers/chatSlice";
 
 const MainPage = () => {
@@ -93,7 +93,7 @@ const MainPage = () => {
 
 
             {/* Chatwindow */}
-            <div className='fixed bottom-0 right-5'>
+            <div className='fixed bottom-0 right-5 z-[200]'>
                 <div className="flex gap-3 flex-row-reverse">
                     {
                         activeChats.length > 0 && activeChats.map((item, index) => (

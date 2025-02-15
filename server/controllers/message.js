@@ -36,7 +36,7 @@ exports.SentMessage = async (req, res) => {
 
         await CreateMessage.save()
 
-        const datamessage = await Message.findById(CreateMessage._id).populate('sender', '-password')
+        const datamessage = await Message.findById(CreateMessage._id).populate('sender receiver', '-password')
 
         res.status(200).json({
             message: "Message Sent Succesfully",
@@ -96,13 +96,13 @@ exports.GetMessage = async (req, res) => {
 
 exports.GetLastMessage = async (req, res) => {
     try {
-        const currentid = new mongoose.Types.ObjectId(req.user.user_id)
+        const currentid = req.user.user_id
         const GroupMessages = await Message.aggregate([
             {
                 $match: {
                     $or: [
-                        { sender: currentid },
-                        { receiver: currentid }
+                        { sender: new mongoose.Types.ObjectId(req.user.user_id) },
+                        { receiver: new mongoose.Types.ObjectId(req.user.user_id) }
                     ]
                 }
             },
@@ -121,10 +121,15 @@ exports.GetLastMessage = async (req, res) => {
             {
                 $group: {
                     _id: "$chatgroup",
-                    messages: { $last: "$$ROOT" },
+                    messages: { $last: "$$ROOT" }, //ถ้าจะเอาัท้งหมดตั้งแต่ตัวแรกยันตัวท้าายใช้ $push ถ้าแค่ตัวแรกใช้ $first
                 }
             },
             { $sort: { "messages.createAt": -1 } },
+            {
+                $project: {
+                    "messages.chatgroup": 0 //ลบตัว chatgroup ที่ทำไว้ตอนแรกออกเพื่อไม่ให้รก
+                }
+            }
         ]);
 
 
@@ -134,7 +139,7 @@ exports.GetLastMessage = async (req, res) => {
         ]);
 
         const updateMessages = populatedMessages.map((item) => {
-            if (item.messages.receiver === currentid) {
+            if (String(item.messages.receiver._id) === String(currentid)) {
                 const updateData = { ...item, messages: { ...item.messages, targetuser: item.messages.sender } }
                 return updateData
             } else {
@@ -152,9 +157,32 @@ exports.GetLastMessage = async (req, res) => {
     } catch (error) {
         console.log(error)
         res.status(500).json({
-            message: error.message
+            message: error.message,
         })
     }
 }
 
+exports.ReadMessage = async (req, res) => {
+    try {
+        const currentuserid = req.user.user_id
+        const targetuserid = req.params.id
 
+        const updateRead = await Message.updateMany({ sender: targetuserid, receiver: currentuserid },{
+            $set: {
+                readByReceiver: true
+            }
+        })
+
+        res.status(200).json({
+            message: "updateok",
+            data: updateRead,
+        })
+
+
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({
+            message: error.message,
+        })
+    }
+}

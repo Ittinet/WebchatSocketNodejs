@@ -2,7 +2,7 @@ import axios from 'axios'
 import { Search } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { GetLastMessage } from '../Reducers/chatSlice'
+import { AddChat, GetLastMessage } from '../../Reducers/chatSlice'
 
 const MessageWindow = ({ setMenuWindow, MessageWindowRef }) => {
     const dispatch = useDispatch()
@@ -10,6 +10,8 @@ const MessageWindow = ({ setMenuWindow, MessageWindowRef }) => {
     const LastMessage = useSelector(state => state.chat.LastMessage)
     const currentuser = useSelector(state => state.user.currentuser)
     const componentRef = useRef(null)
+
+
 
     useEffect(() => {
         const handleClickOutSide = (e) => {
@@ -27,10 +29,14 @@ const MessageWindow = ({ setMenuWindow, MessageWindowRef }) => {
 
     }, [])
 
-    console.log('currentuser', currentuser)
-    console.log('Lastmessage', LastMessage)
+    useEffect(() => {
+        // console.log('currentuser', currentuser)
+        console.log('Lastmessage', LastMessage)
+    }, [])
 
-
+    const handleOpenChat = (data) => {
+        dispatch(AddChat(data))
+    }
 
 
     return (
@@ -53,10 +59,10 @@ const MessageWindow = ({ setMenuWindow, MessageWindowRef }) => {
 
 
                     {/* Body */}
-                    <div className='py-2 mt-2 flex flex-col h-[1600px] gap-5 overflow-y-auto px-5'>
+                    <div className='py-2 px-2 gap-1 flex flex-col h-[1600px] overflow-y-auto'>
                         {
                             LastMessage.length > 0 && LastMessage.map((item, index) =>
-                                <div key={index} className='flex gap-5 relative'>
+                                <div onClick={() => handleOpenChat(item.messages.targetuser)} key={index} className='flex gap-5 relative rounded-lg hover:bg-[#e6e0f7] cursor-pointer py-3 px-3 '>
                                     <div>
                                         <div className='w-14 h-14 rounded-full overflow-hidden flex items-center justify-center bg-white'>
                                             <img className='object-cover' src={item.messages.targetuser.profile_cropped} alt="" />
@@ -64,10 +70,10 @@ const MessageWindow = ({ setMenuWindow, MessageWindowRef }) => {
                                     </div>
                                     <div className='mt-1'>
                                         <h1 className='text-md font-bold text-gray-600'>{item.messages.targetuser.username}</h1>
-                                        <p className='text-sm text-gray-400'>{item.messages.sender._id === currentuser._id && "คุณ : "}{item.messages.messageContent}</p>
+                                        <p className='text-sm text-gray-400 mt-[1px]'>{item.messages.sender._id === currentuser._id && "คุณ : "}{item.messages.messageContent}</p>
                                     </div>
                                     {
-                                        (!item.messages.readByReceiver && item.messages.sender._id !== currentuser._id) && <div className='absolute right-2 top-5 w-3 h-3 bg-[#e0aefd] rounded-full'></div>
+                                        (!item.messages.readByReceiver && item.messages.sender._id !== currentuser._id) && <div className='absolute right-5 top-7 w-3 h-3 bg-[#e0aefd] rounded-full'></div>
                                     }
 
                                 </div>

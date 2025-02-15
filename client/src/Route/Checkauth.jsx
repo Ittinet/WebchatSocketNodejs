@@ -70,13 +70,12 @@ const Checkauth = ({ element }) => {
                 dispatch(updateOfflineStatus({ userid, socketid }))
                 dispatch(UpdateChatIsOffline({ userid, socketid }))
             })
-
             return () => {
                 socketInstance.close()
                 setIsSocketConnected(false)
             }
-
         }
+
     }, [checkuser, token, user])
 
 

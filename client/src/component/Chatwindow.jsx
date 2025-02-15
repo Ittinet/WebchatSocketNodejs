@@ -1,6 +1,6 @@
-import { ChevronDown, Minus, Phone, Video, X } from 'lucide-react'
+import { Check, ChevronDown, Minus, Phone, Video, X } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
-import { ExistChat } from '../Reducers/chatSlice'
+import { ExistChat, ReadMessage, UpdateLastMessage } from '../Reducers/chatSlice'
 import axios from 'axios'
 import { useEffect, useRef, useState } from 'react'
 import io from 'socket.io-client'
@@ -14,22 +14,46 @@ const Chatwindow = ({ chatData }) => {
     const { socket } = useSocket()
     const dispatch = useDispatch()
     const MessageScrollRef = useRef()
+    const [MessageFindCheck, setMessageFindCheck] = useState(null)
 
 
 
     const token = useSelector(state => state.auth.token)
     const user = useSelector(state => state.auth.user)
     const currentuser = useSelector(state => state.user.currentuser)
+    const LastMessage = useSelector(state => state.chat.LastMessage)
 
     const [LastActive, setLastActive] = useState('')
     const [MessageInput, setMessageInput] = useState('')
     const [MessageData, setMessageData] = useState([])
 
-    // console.log('chatdata', chatData)
+    console.log('messagecheck', MessageFindCheck)
+    console.log('lastmessage', LastMessage)
+
+    useEffect(() => {
+        if (LastMessage.length > 0 && token) {
+            const messageFind = LastMessage.find((item) => item.messages.targetuser._id === chatData._id)
+            if (messageFind) {
+                setMessageFindCheck(messageFind)
+                if (messageFind.messages.targetuser._id === chatData._id && messageFind.messages.sender._id === chatData._id && !messageFind.messages.readByReceiver) {
+                    dispatch(ReadMessage({ token, targetuser: chatData._id }))
+                    socket.emit('ReadMessage', chatData._id)
+                    console.log('test', messageFind)
+                }
+            }
+        }
+    }, [chatData._id, LastMessage])
+
+    useEffect(() => {
+        socket.on('ReadByReceiver', () => {
+            console.log('read already')
+            setMessageFindCheck((prev) => ({ ...prev, messages: { ...prev.messages, readByReceiver: true } }))
+        })
+    }, [])
 
     useEffect(() => {
         socket.on('NewMessage', (data) => {
-            // console.log('data', data)
+            console.log('data', data)
             if (data.sender._id === chatData._id) {
                 setMessageData((prev) => {
                     if (!prev.some(item => item._id === data._id)) {
@@ -37,7 +61,10 @@ const Chatwindow = ({ chatData }) => {
                     }
                     return prev
                 })
+
             }
+
+
         })
     }, [])
 
@@ -64,11 +91,10 @@ const Chatwindow = ({ chatData }) => {
 
             socket.emit('SentMessage', {
                 ...res.data.datamessage,
-                socketid: chatData.socketId
             })
-
             setMessageInput('')
             setMessageData((prev) => [...prev, res.data.datamessage])
+            dispatch(UpdateLastMessage(res.data.datamessage))
         } catch (error) {
             console.log(error)
         }
@@ -104,7 +130,7 @@ const Chatwindow = ({ chatData }) => {
         if (MessageScrollRef.current) {
             MessageScrollRef.current.scrollIntoView({ behavior: 'auto' })
         }
-    }, [MessageData])
+    }, [MessageData, MessageFindCheck])
 
     useEffect(() => {
         if (chatData && chatData.last_active) {
@@ -315,6 +341,12 @@ const Chatwindow = ({ chatData }) => {
 
 
                             </div>
+                            {
+                                MessageFindCheck &&
+                                (MessageFindCheck.messages.readByReceiver && MessageFindCheck.messages.sender._id === currentuser._id) &&
+                                <div className='flex gap-2 items-center justify-end text-gray-500 text-sm mt-2 mr-2'><Check className='text-gray-400' size={19} />อ่านแล้ว</div>
+                            }
+
                             <div ref={MessageScrollRef}></div>
                         </div>
 

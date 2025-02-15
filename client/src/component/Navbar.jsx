@@ -18,12 +18,28 @@ const Navbar = ({ handleOpenMenu, MessageWindowRef, RequestWindowRef }) => {
     const CurrentUser = useSelector(state => state.user.currentuser)
     const token = useSelector(state => state.auth.token)
     const currentFriend = useSelector(state => state.user.currentFriend)
+    const LastMessage = useSelector(state => state.chat.LastMessage)
 
     const [OpenChat, setOpenChat] = useState(false)
     const [SearchQuery, setSearchQuery] = useState('')
     const [FriendSearch, setFriendSearch] = useState([])
+    const [CountUnread, setCountUnread] = useState(0)
 
     const searchRef = useRef(null)
+
+
+    useEffect(() => {
+        let countunreadmessage = 0
+        if (LastMessage.length > 0) {
+            LastMessage.forEach(item => {
+                if (!item.messages.readByReceiver && item.messages.sender._id !== CurrentUser._id) {
+                    countunreadmessage += 1
+                }
+            });
+            setCountUnread(countunreadmessage)
+        }
+
+    }, [LastMessage])
 
 
     useEffect(() => {
@@ -173,7 +189,7 @@ const Navbar = ({ handleOpenMenu, MessageWindowRef, RequestWindowRef }) => {
                             <button className="bg-[#e7b9b9] p-2.5 rounded-full">
                                 <QuestionAnswerIcon size={25} className='text-white' />
                             </button>
-                            <div className='absolute w-6 h-6 bg-red-600 rounded-full left-[-5px] top-[-1px] text-[12px] flex items-center justify-center p-2.5 font-bold text-white animate-bounce'>25</div>
+                            {CountUnread !== 0 && <div className='absolute w-6 h-6 bg-red-600 rounded-full left-[-5px] top-[-1px] text-[12px] flex items-center justify-center p-2.5 font-bold text-white animate-bounce'>{CountUnread}</div>}
                         </div>
 
                         {/* Notifi */}
