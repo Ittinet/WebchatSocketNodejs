@@ -131,8 +131,8 @@ const postSchema = new mongoose.Schema({
 
     },
     images: {
-        type: String,
-        default: ''
+        type: [String],
+        default: []
     },
     content: {
         type: String,
@@ -146,13 +146,19 @@ const postSchema = new mongoose.Schema({
         content: { type: String },
         createAt: { type: Date, default: Date.now }
     }],
+    shapeImage: {
+        type: Boolean,
+        default: true
+    },
     likes: [{
         user: {
             type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
         },
         type: {
             type: String,
-            enum: ['like', 'love', 'sad', 'laugh']
+            enum: ['like', 'love', 'sad', 'laugh'],
+            default: 'like'
         }
     }],
     createAt: {

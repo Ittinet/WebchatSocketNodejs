@@ -19,3 +19,17 @@ MongoDB รองรับการค้นหาข้อความเต็
 2.ใช้คำสั่ง $text เพื่อค้นหาคำจากนั้น
 UserSchema.index({ username: 'text' });  // สร้าง index สำหรับการค้นหาชื่อ
 const UserData = await User.find({ $text: { $search: username } }).select('-password');
+
+
+//update ข้อมูล
+1.แบบ หาจาก id และอัพเดท แบบใช้ $push
+const updateLikePost = await Post.findByIdAndUpdate(postid, {
+            $push: {
+                likes: {
+                    user: currentid,
+                }
+            }
+        }, { new: true }
+        ).populate('likes.user', '-password')
+
+2.แบบใช้ $pull

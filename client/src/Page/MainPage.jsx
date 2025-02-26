@@ -28,6 +28,13 @@ const MainPage = () => {
         }
     }
 
+    const handleRefreshHome = () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        })
+    }
+
     useEffect(() => {
         if (token) {
             dispatch(GetLastMessage(token))
@@ -39,7 +46,7 @@ const MainPage = () => {
         <div className="relative">
             {/* Navbar */}
             <div className="sticky top-0 z-[80] drop-shadow-md">
-                <Navbar handleOpenMenu={handleOpenMenu} MessageWindowRef={MessageWindowRef} RequestWindowRef={RequestWindowRef} />
+                <Navbar handleRefreshHome={handleRefreshHome} handleOpenMenu={handleOpenMenu} MessageWindowRef={MessageWindowRef} RequestWindowRef={RequestWindowRef} />
             </div>
 
             {/* Body */}
@@ -62,7 +69,7 @@ const MainPage = () => {
                         {/* Maincontent */}
                         <div className="flex-grow px-[32px] bg-[#fdf6f6]">
                             <div className="w-full justify-center flex xl:min-w-[680px] md:min-w-[450px]">
-                                <div className="w-full max-w-[680px] h-[2000px]">
+                                <div className="w-full max-w-[680px]">
                                     <Outlet />
                                 </div>
                             </div>
@@ -70,7 +77,7 @@ const MainPage = () => {
 
 
                         {/* FriendChat */}
-                        <div className="xl:max-w-[360px] lg:max-w-[265px] max-w-[290px] hidden md:block h-[calc(100vh-70px)]  bg-[#fdf6f6] w-full h- sticky top-[70px] ">
+                        <div className="xl:max-w-[360px] lg:max-w-[265px] max-w-[290px] hidden md:block h-[calc(100vh-70px)]  bg-[#fdf6f6] w-full h- sticky top-[70px]">
                             <FriendChat />
                         </div>
 

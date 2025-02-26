@@ -1,7 +1,6 @@
-
-const IconLoading1 = () => {
+const IconLoading1 = ({ width }) => {
     return (
-        <div className="w-8 h-8 border-[#c7afff] border-t-[5px] border-t-[#e7c3f8] border-[5px] animate-spin rounded-full"></div>
+        <div className={`w-${width ? width : '5'} h-${width ? width : '5'} border-[#c7afff] border-t-[5px] border-t-[#e7c3f8] border-[5px] animate-spin rounded-full`}></div>
     )
 }
 

@@ -1,9 +1,8 @@
 import { Check, ChevronDown, Minus, Phone, Video, X } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
-import { ExistChat, ReadMessage, UpdateLastMessage } from '../Reducers/chatSlice'
+import { ExistChat, ReadMessage, UpdateLastMessage, UpdateReadByReceiver } from '../Reducers/chatSlice'
 import axios from 'axios'
 import { useEffect, useRef, useState } from 'react'
-import io from 'socket.io-client'
 import { useSocket } from '../SocketContext'
 import { differenceInDays, differenceInHours, differenceInMinutes, differenceInMonths, differenceInWeeks, differenceInYears, format, isSameDay } from 'date-fns'
 import { th } from 'date-fns/locale'
@@ -26,10 +25,11 @@ const Chatwindow = ({ chatData }) => {
     const [LastActive, setLastActive] = useState('')
     const [MessageInput, setMessageInput] = useState('')
     const [MessageData, setMessageData] = useState([])
+    const [onUserTyping, setOnUserTyping] = useState(false)
 
-    console.log('messagecheck', MessageFindCheck)
-    console.log('lastmessage', LastMessage)
+    // console.log('lastmessage', LastMessage)
 
+    // ReadMessage
     useEffect(() => {
         if (LastMessage.length > 0 && token) {
             const messageFind = LastMessage.find((item) => item.messages.targetuser._id === chatData._id)
@@ -38,19 +38,39 @@ const Chatwindow = ({ chatData }) => {
                 if (messageFind.messages.targetuser._id === chatData._id && messageFind.messages.sender._id === chatData._id && !messageFind.messages.readByReceiver) {
                     dispatch(ReadMessage({ token, targetuser: chatData._id }))
                     socket.emit('ReadMessage', chatData._id)
-                    console.log('test', messageFind)
                 }
             }
         }
+
     }, [chatData._id, LastMessage])
 
+
+    // update readmessage by receiver in redux
+    useEffect(() => {
+        if (MessageFindCheck) {
+            if (MessageFindCheck.messages.readByReceiver) {
+                dispatch(UpdateReadByReceiver(MessageFindCheck.messages._id))
+            }
+        }
+
+
+    }, [MessageFindCheck])
+
+
+    // readmessage by receiver
     useEffect(() => {
         socket.on('ReadByReceiver', () => {
-            console.log('read already')
-            setMessageFindCheck((prev) => ({ ...prev, messages: { ...prev.messages, readByReceiver: true } }))
+            setMessageFindCheck((prev) => ({
+                ...prev,
+                messages: {
+                    ...prev.messages,
+                    readByReceiver: true
+                }
+            }))
         })
     }, [])
 
+    // อัพเดท message เมื่อได้รับ
     useEffect(() => {
         socket.on('NewMessage', (data) => {
             console.log('data', data)
@@ -130,7 +150,9 @@ const Chatwindow = ({ chatData }) => {
         if (MessageScrollRef.current) {
             MessageScrollRef.current.scrollIntoView({ behavior: 'auto' })
         }
-    }, [MessageData, MessageFindCheck])
+        console.log('test')
+    }, [MessageData, MessageFindCheck, onUserTyping])
+
 
     useEffect(() => {
         if (chatData && chatData.last_active) {
@@ -240,6 +262,48 @@ const Chatwindow = ({ chatData }) => {
         return 'ใช้งานเมื่อ 1 นาทีที่แล้ว'
     }
 
+    const handleStopTyping = () => {
+        socket.emit('onTyping', { targetid: chatData._id, data: '' })
+    }
+
+
+    useEffect(() => {
+        socket.emit('onTyping', { targetid: chatData._id, data: MessageInput })
+    }, [MessageInput])
+
+    useEffect(() => {
+        let typingTimeout;
+
+        socket.on('areadyTyping', ({ fromid, data }) => {
+            if (fromid === chatData._id) {
+                if (data) {
+                    setOnUserTyping(true)
+                    // clear timeout ก่อนทุกครั้งที่ทำการพิม
+                    if (typingTimeout) {
+                        clearTimeout(typingTimeout)
+                    }
+                } else {
+                    typingTimeout = setTimeout(() => {
+                        setOnUserTyping(false)
+                        console.log('stop')
+                    }, 500)
+
+                }
+            }
+
+        })
+
+        return () => {
+            // clear timeout และ socket ทุกครั้งที่ component unmount
+            if (typingTimeout) {
+                clearTimeout(typingTimeout)
+            }
+            socket.off('areadyTyping')
+        }
+
+
+    }, [])
+
 
 
 
@@ -299,7 +363,7 @@ const Chatwindow = ({ chatData }) => {
                         </div>
 
                         {/* body */}
-                        <div className='h-[450px] bg-[#e5e5fd] py-5 px-2 overflow-auto'>
+                        <div className='h-[450px] bg-[#e5e5fd] py-5 px-2 overflow-y-auto'>
                             <div className='space-y-3'>
 
                                 {/* Sent-Receiver */}
@@ -326,7 +390,7 @@ const Chatwindow = ({ chatData }) => {
 
                                                     <div className='max-w-[250px] break-words'>
                                                         <div className='flex relative group'>
-                                                            <div className={`${item.sender._id === user.user_id ? 'bg-[#f4d7ff]' : 'bg-[#ffffff]'} px-5 py-2 rounded-3xl`}>
+                                                            <div className={`${item.sender._id === user.user_id ? 'bg-[#f4d7ff]' : 'bg-[#ffffff]'} px-4 py-2 rounded-3xl`}>
                                                                 <p className=''>{item.messageContent}</p>
                                                             </div>
                                                             <span className='text-[12px] opacity-90 bg-white px-2 py-2 rounded-md text-nowrap z-50 absolute left-[-30px] top-10 hidden group-hover:block'>{ShowTitleTime(item.createAt)}</span>
@@ -342,13 +406,34 @@ const Chatwindow = ({ chatData }) => {
 
                             </div>
                             {
-                                MessageFindCheck &&
-                                (MessageFindCheck.messages.readByReceiver && MessageFindCheck.messages.sender._id === currentuser._id) &&
-                                <div className='flex gap-2 items-center justify-end text-gray-500 text-sm mt-2 mr-2'><Check className='text-gray-400' size={19} />อ่านแล้ว</div>
+                                MessageFindCheck && (MessageFindCheck.messages.readByReceiver && MessageFindCheck.messages.sender._id === currentuser._id)
+                                    ?
+                                    <div className='flex gap-2 items-center justify-end text-gray-500 text-sm mt-2 mr-2'><Check className='text-gray-400' size={19} />อ่านแล้ว</div>
+
+                                    : MessageFindCheck && (!MessageFindCheck.messages.readByReceiver && MessageFindCheck.messages.sender._id === currentuser._id)
+                                        ?
+                                        <div className='flex gap-2 items-center justify-end text-gray-500 text-[12px] mt-3 mr-4'>ส่งแล้ว</div>
+
+                                        : ''
+                            }
+
+
+
+                            {
+                                <div className={`max-w-[250px] break-words mt-5 transition-all duration-150  ${onUserTyping ? 'translate-y-0 block' : 'translate-y-20 hidden'}`}>
+                                    <div className='flex relative group'>
+                                        <div className={`bg-[#dbd2e0] px-3 py-2 rounded-3xl`}>
+                                            <p className='flex justify-center items-center text-sm text-white'>o o o</p>
+                                        </div>
+                                    </div>
+
+                                </div>
                             }
 
                             <div ref={MessageScrollRef}></div>
                         </div>
+
+
 
                         {/* Input */}
                         <div className='bg-[#e1bffd] px-2 py-2'>
@@ -363,7 +448,7 @@ const Chatwindow = ({ chatData }) => {
 
                                 {/* input */}
                                 <div className='w-full'>
-                                    <input onChange={(e) => setMessageInput(e.target.value)} value={MessageInput} onKeyDown={handleKeyDownSendMessage} className=' rounded-full w-full py-2 px-5 bg-[#f1eafc] focus:outline-none focus:ring-2 focus:ring-[#ffcfdb]' type="text" placeholder='Message...' />
+                                    <input onBlur={handleStopTyping} onChange={(e) => setMessageInput(e.target.value)} value={MessageInput} onKeyDown={handleKeyDownSendMessage} className=' rounded-full w-full py-2 px-5 bg-[#f1eafc] focus:outline-none focus:ring-2 focus:ring-[#ffcfdb]' type="text" placeholder='Message...' />
                                 </div>
 
                                 <div className='flex items-center hover:scale-110 cursor-pointer'>
@@ -377,7 +462,8 @@ const Chatwindow = ({ chatData }) => {
 
                     </div>
                 </div>
-            </div></div>
+            </div>
+        </div>
     )
 }
 

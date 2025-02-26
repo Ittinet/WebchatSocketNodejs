@@ -1,74 +1,47 @@
 import { useRef, useState } from 'react';
-import ReactCrop from 'react-image-crop';
-import 'react-image-crop/dist/ReactCrop.css';
-import FileInput from '../../component/ImageProfile/FileInput';
-import ImageCropper from '../../component/ImageProfile/ImageCropper';
+import { ThumbsUp } from 'lucide-react';
 
 const ReelsPage = () => {
-    const [image, setImage] = useState('')
-    const [currentPage, setCurrentPage] = useState("choose-img")
-    const [imageAfterCrop, setImageAfterCrop] = useState('')
+    const [clicked, setClicked] = useState(false);
+    const timeoutRef = useRef(null);
+    const animationRef = useRef(null);  // ใช้สำหรับเก็บค่าของการรีเซ็ตแอนิเมชัน
 
-    const onImageSelected = (selectedimg) => {
-        setImage(selectedimg)
-        setCurrentPage("crop-img")
-    }
-
-    const onCropDone = (imgCropped) => {
-        const canvas = document.createElement("canvas")
-        canvas.width = imgCropped.width;
-        canvas.height = imgCropped.height;
-
-        const context = canvas.getContext("2d")
-
-        let imageObj1 = new Image();
-        imageObj1.src = image;
-        imageObj1.onload = () => {
-            context.drawImage(
-                imageObj1,
-                imgCropped.x, imgCropped.y, // ตำแหน่งเริ่มต้นบนภาพต้นฉบับ
-                imgCropped.width, imgCropped.height, // ขนาดที่ต้องการครอบ
-                0,  0,  // ตำแหน่งที่วาดภาพใน canvas
-                imgCropped.width,imgCropped.height // ขนาดใน canvas
-            )
-            const dataURL = canvas.toDataURL("image/jpeg")
-
-            setImageAfterCrop(dataURL)
-            setCurrentPage('choose-img')
-            console.log('imageobj', imageObj1)
+    // ฟังก์ชันเพื่อสลับสถานะเมื่อคลิก
+    const handleClick = () => {
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
         }
 
+        // เริ่มแอนิเมชัน
+        setClicked(true);
 
-    }
+        // รีเซ็ตสถานะหลังจากที่แอนิเมชันเสร็จสิ้น
+        timeoutRef.current = setTimeout(() => {
+            setClicked(false);
+        }, 800); // 800ms ตามระยะเวลาแอนิเมชัน
+    };
 
-    const onCropCancel = () => {
-        setCurrentPage('choose-img')
-    }
+    // จับเหตุการณ์ animationend เพื่อให้แน่ใจว่าแอนิเมชันเสร็จสิ้นแล้ว
+    const handleAnimationEnd = () => {
+        // เมื่อแอนิเมชันเสร็จสิ้นจะรีเซ็ตสถานะ
+        setClicked(false);
+    };
 
     return (
         <div className='mt-10'>
-            <div className='w-full bg-[#eeeeee] p-5 flex flex-col'>
-                {currentPage === 'choose-img' ?
-                    <FileInput onImageSelected={onImageSelected} />
-                    : currentPage === 'crop-img' ?
-                        <ImageCropper
-                            image={image}
-                            onCropDone={onCropDone}
-                            onCropCancel={onCropCancel}
-
-                        />
-                        : <div>
-
-                        </div>
-                }
-                <div className='w-[300px] h-[300px] flex rounded-full overflow-hidden'>
-                    <img src={imageAfterCrop} alt="" />
-                </div>
-
+            <div className=''>
+                <button
+                    onClick={handleClick}
+                    className={`bg-purple-200 px-5 py-2 rounded-3xl`}
+                >
+                    <ThumbsUp
+                        className={`text-[#a7b0fc] ${clicked ? 'animate-expand' : ''}`}
+                        onAnimationEnd={handleAnimationEnd} // เมื่อแอนิเมชันเสร็จสิ้น
+                    />
+                </button>
             </div>
         </div>
     );
 };
 
 export default ReelsPage;
-

@@ -9,7 +9,7 @@ import FriendNotify from './Navbar/FriendNotify'
 import { useDispatch, useSelector } from 'react-redux'
 import { Getcurrentuser } from '../Reducers/userSlice'
 
-const Navbar = ({ handleOpenMenu, MessageWindowRef, RequestWindowRef }) => {
+const Navbar = ({ handleOpenMenu, MessageWindowRef, RequestWindowRef, handleRefreshHome }) => {
     // const CurrentUser = useDataStore(state => state.CurrentUserData)
     // const GetCurrentUser = useDataStore(state => state.getCurrentUserData)
     // const token = useAuthStore(state => state.token)
@@ -93,7 +93,7 @@ const Navbar = ({ handleOpenMenu, MessageWindowRef, RequestWindowRef }) => {
 
                 {/* MenuMain */}
                 <div className="flex items-center" >
-                    <NavLink to={"/"} end className={({ isActive }) =>
+                    <NavLink onClick={handleRefreshHome} to={"/"} end className={({ isActive }) =>
                         isActive
                             ? 'bg-[#e7b9b9] py-3 px-10 rounded-lg'
                             : 'py-3 px-10 rounded-xl hover:bg-[#e7b9b9]'
@@ -116,8 +116,8 @@ const Navbar = ({ handleOpenMenu, MessageWindowRef, RequestWindowRef }) => {
 
                 {/* SearchBar left */}
                 <div ref={searchRef} className="fixed left-0 top-0">
-                    <div className='flex flex-col'>
-                        <div className={`${!OpenChat ? '' : 'bg-[#ebd9fc]'}  py-5 pr-4`}>
+                    <div className={`flex flex-col bg-[#ffd8da] ${OpenChat && 'shadow-md'}`}>
+                        <div className={`${!OpenChat ? '' : ''}  py-5 pr-4`}>
                             <div className="flex gap-3 px-5 items-center w-[350px] relative ">
 
                                 <div className=''>
@@ -125,9 +125,9 @@ const Navbar = ({ handleOpenMenu, MessageWindowRef, RequestWindowRef }) => {
                                 </div>
 
 
-                                <div className={`hover:bg-[#ded2e9] p-2 rounded-full absolute transition-all duration-500 ${!OpenChat ? 'opacity-0 left-[100px]' : 'opacity-1 left-[10px]'}`}>
+                                <button className={`hover:bg-[#e6c5c5] p-2 rounded-full absolute transition-all duration-500 ${!OpenChat ? 'opacity-0 left-[100px]' : 'opacity-1 left-[10px]'}`}>
                                     <ArrowLeft />
-                                </div>
+                                </button>
 
                                 <label htmlFor="searchbar" className={`flex items-center px-2 py-3 rounded-full bg-white gap-3 transition-all duration-700 absolute right-0 ${OpenChat ? 'w-[290px]' : 'w-[230px]'}`}>
                                     <span><Search /></span>
@@ -142,12 +142,12 @@ const Navbar = ({ handleOpenMenu, MessageWindowRef, RequestWindowRef }) => {
                                 </label>
                             </div>
                         </div>
-                        <div className='bg-[#f5eaff]'>
+                        <div className='bg-[#ffeced]'>
                             <div>
                                 {
                                     (FriendSearch.length > 0 && OpenChat) &&
                                     FriendSearch.map((item, index) =>
-                                        <Link onClick={() => setOpenChat(false)} to={`/${item._id}`} key={index} className='flex px-3 py-2 gap-4 items-center hover:bg-[#ded2e9]'>
+                                        <Link onClick={() => setOpenChat(false)} to={`/${item._id}`} key={index} className='flex px-3 py-3 gap-4 items-center hover:bg-[#f8e4e5]'>
                                             <div>
                                                 <div className='w-12 h-12 rounded-full flex items-center justify-center overflow-hidden'>
                                                     <img className='object-cover' src={item.profile_cropped} alt="" />

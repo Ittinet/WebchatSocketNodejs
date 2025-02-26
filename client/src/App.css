@@ -1,0 +1,43 @@
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* แถวแรกมี 2 คอลัมน์ */
+  gap: 16px; /* ระยะห่างระหว่างภาพ */
+}
+
+/* ปรับแต่ง scrollbar */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 8px; /* ความกว้างของ scrollbar */
+}
+
+/* หลอด scrollbar */
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background-color: rgb(217, 204, 252);
+  border-radius: 10px;
+}
+
+/* พื้นหลัง scrollbar */
+.overflow-y-auto::-webkit-scrollbar-track {
+  background-color: rgb(233, 228, 228);
+  border-radius: 10px;
+}
+
+/* สร้าง @keyframes เพื่อทำให้ปุ่มขยายและหดกลับ */
+@keyframes expandAndContract {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.3) rotate(-20deg); /* ขยายปุ่ม */
+  }
+  80% {
+    transform: scale(1.3) rotate(20deg);
+  }
+  100% {
+    transform: scale(1); /* กลับสู่ขนาดเดิม */
+  }
+}
+
+/* ใช้แอนิเมชันในคลาส animate-expand */
+.animate-expand {
+  animation: expandAndContract 0.8s ease-in-out; /* ใช้เวลา 0.5 วินาที */
+}

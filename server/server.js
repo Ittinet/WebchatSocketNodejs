@@ -22,7 +22,7 @@ const PORT = 8000
 
 // middleware
 // app.use(morgan('dev'))
-app.use(express.json({ limit: '2mb' }))
+app.use(express.json({ limit: '10mb' }))
 app.use(cors())
 
 // app.use('/api', authRouter)
@@ -61,7 +61,6 @@ const verifyToken = (socket, next) => {
         if (err) {
             return next(new Error('Invalid token'))
         }
-
         socket.user = decoded;
         next()
     })
@@ -111,12 +110,15 @@ io.on('connection', (socket) => {
 
     socket.on('AddFriend', (data) => {
         // const { socketid, ...newRequest } = data
-        console.log('AddFriendData', data)
         io.to(userOnline[data.receiver._id]).emit('newRequest', data)
     })
 
     socket.on('ReadMessage', (receiverId) => {
         io.to(userOnline[receiverId]).emit('ReadByReceiver')
+    })
+
+    socket.on('onTyping', ({ targetid, data }) => {
+        io.to(userOnline[targetid]).emit('areadyTyping', { fromid: socket.user.user_id, data })
     })
 
 

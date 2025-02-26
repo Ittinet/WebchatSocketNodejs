@@ -2,7 +2,9 @@ import { configureStore } from "@reduxjs/toolkit";
 import userSlice from "../Reducers/userSlice";
 import authSlice from "../Reducers/authSlice"
 import chatSlice from "../Reducers/chatSlice";
+import postSlice from "../Reducers/postSlice";
 import storage from 'redux-persist/lib/storage'
+
 import {
     persistStore,
     persistReducer,
@@ -13,6 +15,7 @@ import {
     PURGE,
     REGISTER,
 } from "redux-persist";
+
 
 
 const persistConfig = {
@@ -28,7 +31,9 @@ const store = configureStore({
     reducer: {
         user: userSlice,
         auth: persistedUserReducer,
-        chat: chatSlice
+        chat: chatSlice,
+        post: postSlice
+
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

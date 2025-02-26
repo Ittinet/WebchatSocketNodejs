@@ -110,6 +110,15 @@ export const chatSlice = createSlice({
                     return item
                 }
             })
+        },
+        UpdateReadByReceiver: (state, action) => {
+            state.LastMessage = state.LastMessage.map((item) => {
+                if (item.messages._id === action.payload && !item.messages.readByReceiver) {
+                    return { ...item, messages: { ...item.messages, readByReceiver: true } }
+                } else {
+                    return item
+                }
+            })
         }
     },
     extraReducers: (builder) => {
@@ -152,5 +161,5 @@ export const chatSlice = createSlice({
 
 })
 
-export const { AddChat, UpdateChatIsOnline, UpdateChatIsOffline, ExistChat, UpdateLastMessage } = chatSlice.actions;
+export const { AddChat, UpdateChatIsOnline, UpdateChatIsOffline, ExistChat, UpdateLastMessage, UpdateReadByReceiver } = chatSlice.actions;
 export default chatSlice.reducer;
