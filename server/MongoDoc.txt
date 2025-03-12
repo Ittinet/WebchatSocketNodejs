@@ -32,4 +32,40 @@ const updateLikePost = await Post.findByIdAndUpdate(postid, {
         }, { new: true }
         ).populate('likes.user', '-password')
 
-2.แบบใช้ $pull
+
+
+//การ populate ฟิลที่อยุซ้อนข้างใน แบบเลือกได้ว่าเอาฟิลไหนบ้าง
+
+แบบแรก
+const NotifyData = await Notify.find({
+    user: currentid
+}).populate({
+    path: 'content',
+    select: 'title createAt', // เลือกเฉพาะฟิลด์ที่ต้องการจาก content
+    populate: {
+        path: 'user',
+        select: 'name email' // เลือกเฉพาะฟิลด์ที่ต้องการจาก user
+    }
+}).sort({ 'content.createAt': -1 })
+
+แบบสอง
+const NotifyData = await Notify.find({
+            user: currentid
+        }).populate({
+            path: 'content',
+            populate: [
+                {
+                    path: 'user',
+                    select: '-password',
+                },
+                {
+                    path: 'likes.user',
+                    select:'-password'
+                }
+            ]
+        })
+
+แบบสาม แบบมีเงื่อนไข
+
+.populate('userAccept', 'name email', { active: true })
+

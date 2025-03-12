@@ -1,4 +1,4 @@
-const { Post } = require("../models/Schema")
+const { Post, Notify } = require("../models/Schema")
 
 exports.AddPost = async (req, res) => {
     try {
@@ -110,6 +110,38 @@ exports.LikePost = async (req, res) => {
         res.status(200).json({
             status: 'like',
             updateLikePost
+        })
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({
+            message: error.message
+        })
+    }
+}
+
+exports.GetNotify = async (req, res) => {
+    try {
+        const currentid = req.user.user_id
+        const NotifyData = await Notify.find({
+            user: currentid
+        }).populate({
+            path: 'content',
+            populate: [
+                {
+                    path: 'user',
+                    select: '-password',
+                },
+                {
+                    path: 'likes.user',
+                    select: '-password'
+                }
+            ]
+        }).populate('userAccept', '-password').sort({ createAt: -1 })
+
+
+
+        res.status(200).json({
+            NotifyData
         })
     } catch (error) {
         console.log(error)

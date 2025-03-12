@@ -37,11 +37,7 @@ const Checkauth = ({ element }) => {
                 extraHeaders: {
                     Authorization: `Bearer ${token}`
                 },
-                reconnect: true,               // เปิดใช้งาน reconnect
-                reconnectionAttempts: Infinity,       // พยายามเชื่อมต่อใหม่ 5 ครั้ง
-                reconnectionDelay: 1000,       // หน่วงเวลา 1 วินาทีระหว่างการพยายามเชื่อมต่อ
-                reconnectionDelayMax: 5000,    // เวลาหน่วงสูงสุด 5 วินาที
-                timeout: 10000,
+
             })
 
             socketInstance.on('connect', () => {
@@ -52,6 +48,12 @@ const Checkauth = ({ element }) => {
                 dispatch(GetcurrentFriend(token))
 
             })
+
+            // ถ้า socket หลุด
+            socketInstance.on('disconnect', (reason) => {
+                console.log('Socket disconnected due to:', reason);  // log reason for disconnect
+                // setIsSocketConnected(false);
+            });
 
             socketInstance.on('connect_error', (error) => {
                 console.log(error)

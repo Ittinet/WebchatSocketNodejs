@@ -1,24 +1,29 @@
 import Navbar from "../component/Navbar";
 import FriendChat from "../component/FriendChat";
 import Sidebar from "../component/Sidebar";
-import { Outlet, useParams } from "react-router-dom";
+import { Outlet, useLocation, useParams } from "react-router-dom";
 import Chatwindow from "../component/Chatwindow";
 import RequestWindow from "../component/Navbar/RequestWindow";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import MessageWindow from "../component/Navbar/MessageWindow";
 import { GetLastMessage } from "../Reducers/chatSlice";
+import NotifyWindow from "../component/Navbar/NotifyWindow";
 
 const MainPage = () => {
     const { id } = useParams()
     const dispatch = useDispatch()
     const [MenuWindow, setMenuWindow] = useState('')
 
+    const location = useLocation();
+    const currentpath = location.pathname
+
     const token = useSelector(state => state.auth.token)
     const activeChats = useSelector(state => state.chat.activeChats)
 
     const MessageWindowRef = useRef(null)
     const RequestWindowRef = useRef(null)
+    const NotifyWindowRef = useRef(null)
 
     const handleOpenMenu = (mode) => {
         if (mode === MenuWindow) {
@@ -27,6 +32,7 @@ const MainPage = () => {
             setMenuWindow(mode)
         }
     }
+
 
     const handleRefreshHome = () => {
         window.scrollTo({
@@ -46,12 +52,12 @@ const MainPage = () => {
         <div className="relative">
             {/* Navbar */}
             <div className="sticky top-0 z-[80] drop-shadow-md">
-                <Navbar handleRefreshHome={handleRefreshHome} handleOpenMenu={handleOpenMenu} MessageWindowRef={MessageWindowRef} RequestWindowRef={RequestWindowRef} />
+                <Navbar handleRefreshHome={handleRefreshHome} handleOpenMenu={handleOpenMenu} MessageWindowRef={MessageWindowRef} RequestWindowRef={RequestWindowRef} NotifyWindowRef={NotifyWindowRef} />
             </div>
 
             {/* Body */}
             {
-                id
+                id || currentpath.includes('/friend')
                     ?
                     <div className="max-w-[1200px] mx-auto mt-10">
                         <Outlet />
@@ -96,6 +102,11 @@ const MainPage = () => {
             {/* MessageWindow */}
             {
                 MenuWindow === 'MessageWindow' && <MessageWindow setMenuWindow={setMenuWindow} MessageWindowRef={MessageWindowRef} />
+            }
+
+            {/* NotifyWindow */}
+            {
+                MenuWindow === 'NotifyWindow' && <NotifyWindow setMenuWindow={setMenuWindow} NotifyWindowRef={NotifyWindowRef} />
             }
 
 

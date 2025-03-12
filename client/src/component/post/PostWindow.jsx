@@ -6,8 +6,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import IconLoading1 from '../Icon/IconLoading1';
 import { UpdatePost } from '../../Reducers/postSlice';
+import { useSocket } from '../../SocketContext';
+
 const PostWindow = ({ setOpenPostWindow }) => {
     const dispatch = useDispatch()
+    const { socket } = useSocket()
 
     const currentuser = useSelector(state => state.user.currentuser)
     const token = useSelector(state => state.auth.token)
@@ -71,6 +74,7 @@ const PostWindow = ({ setOpenPostWindow }) => {
     }, [images])
 
     const handlePost = async () => {
+
         try {
             setPostLoading(true)
             if (ContentInput) {
@@ -83,8 +87,9 @@ const PostWindow = ({ setOpenPostWindow }) => {
                         Authorization: `Bearer ${token}`
                     }
                 })
-                console.log(res.data)
-
+                console.log('socket', socket)
+                console.log('afterpostData', res.data.data)
+                socket.emit('SendPostNotify', (res.data.data))
                 toast.success('โพสต์สำเร็จ!')
                 dispatch(UpdatePost(res.data.data))
                 setOpenPostWindow(false)
@@ -102,6 +107,7 @@ const PostWindow = ({ setOpenPostWindow }) => {
 
 
     }
+
 
 
 

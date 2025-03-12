@@ -30,12 +30,12 @@ const Sidebar = () => {
             }
 
 
-            <div className="hover:bg-[#f8e6e6] px-5 py-4 rounded-lg flex items-center gap-4">
+            <Link to={'friend'} className="hover:bg-[#f8e6e6] px-5 py-4 rounded-lg flex items-center gap-4">
                 <div className="max-w-10">
                     <img src="https://cdn-icons-png.flaticon.com/512/3429/3429199.png" alt="" />
                 </div>
                 <p className="text-xl">เพื่อน</p>
-            </div>
+            </Link>
             <div className="hover:bg-[#f8e6e6] px-5 py-4 rounded-lg flex items-center gap-4">
                 <div className="max-w-10">
                     <img src="https://cdn-icons-png.flaticon.com/512/6546/6546704.png" alt="" />

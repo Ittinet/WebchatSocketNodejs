@@ -8,17 +8,24 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import FriendNotify from './Navbar/FriendNotify'
 import { useDispatch, useSelector } from 'react-redux'
 import { Getcurrentuser } from '../Reducers/userSlice'
+import { DeletePost, GetNotify, UpdateAcceptFriendNotify, UpdateLikeNotify, UpdatePost, UpdatePostNotify, UpdateUnlinkeNotify } from '../Reducers/postSlice';
+import { useSocket } from '../SocketContext';
 
-const Navbar = ({ handleOpenMenu, MessageWindowRef, RequestWindowRef, handleRefreshHome }) => {
+const Navbar = ({ handleOpenMenu, MessageWindowRef, RequestWindowRef, handleRefreshHome, NotifyWindowRef }) => {
     // const CurrentUser = useDataStore(state => state.CurrentUserData)
     // const GetCurrentUser = useDataStore(state => state.getCurrentUserData)
     // const token = useAuthStore(state => state.token)
     const dispatch = useDispatch()
+    const { socket } = useSocket()
 
     const CurrentUser = useSelector(state => state.user.currentuser)
     const token = useSelector(state => state.auth.token)
     const currentFriend = useSelector(state => state.user.currentFriend)
     const LastMessage = useSelector(state => state.chat.LastMessage)
+
+    const notifyData = useSelector(state => state.post.notifydata)
+    // กรองเอาเฉพาะข้อมูลที่มีอยู่จริงไ่เอา mog
+    const notifyDataFilter = notifyData.filter((item) => !(item.type === 'like' && item.content.likes.length < 1) && !item.readByReceiver)
 
     const [OpenChat, setOpenChat] = useState(false)
     const [SearchQuery, setSearchQuery] = useState('')
@@ -47,6 +54,10 @@ const Navbar = ({ handleOpenMenu, MessageWindowRef, RequestWindowRef, handleRefr
     }, [])
 
     useEffect(() => {
+        dispatch(GetNotify(token))
+    }, [])
+
+    useEffect(() => {
         SearchFriend()
     }, [SearchQuery])
 
@@ -65,6 +76,58 @@ const Navbar = ({ handleOpenMenu, MessageWindowRef, RequestWindowRef, handleRefr
         return () => {
             document.removeEventListener('mousedown', handleClickOutside)
         }
+    }, [])
+
+    // Notify
+
+    //PostNotify
+    useEffect(() => {
+        socket.on('PostFeed', (data) => {
+            dispatch(UpdatePost(data))
+            console.log('PostFeed', data)
+        })
+
+        socket.on('PostNotify', (data) => {
+            console.log('PostNotify', data)
+            dispatch(UpdatePostNotify(data))
+        })
+
+        return () => {
+            socket.off('PostFeed')
+            socket.off('PostNotify')
+        }
+    }, [dispatch])
+
+
+
+    // LikeNotify
+    useEffect(() => {
+        socket.on('LikeNotify', (data) => {
+            dispatch(UpdateLikeNotify(data))
+        })
+
+        socket.on('UnLikeNotify', ({ userlikedId, postdata }) => {
+            dispatch(UpdateUnlinkeNotify({ userlikedId, postdata }))
+        })
+
+        return () => {
+            socket.off('LikeNotify')
+        }
+    }, [])
+
+    // DeleltePostNotify
+    useEffect(() => {
+        socket.on('DeletePostAlready', (postid) => {
+            console.log('deletepost', postid)
+            dispatch(DeletePost(postid))
+        })
+    }, [])
+
+    // AcceptNotify
+    useEffect(() => {
+        socket.on('AcceptNotify', (notifydatasocket) => {
+            dispatch(UpdateAcceptFriendNotify(notifydatasocket))
+        })
     }, [])
 
 
@@ -92,19 +155,19 @@ const Navbar = ({ handleOpenMenu, MessageWindowRef, RequestWindowRef, handleRefr
             <nav className="bg-[#ffd8da] py-2 relative z-70 flex justify-center items-center">
 
                 {/* MenuMain */}
-                <div className="flex items-center" >
+                <div className="flex items-center z-[990] py-7 md:py-0" >
                     <NavLink onClick={handleRefreshHome} to={"/"} end className={({ isActive }) =>
                         isActive
-                            ? 'bg-[#e7b9b9] py-3 px-10 rounded-lg'
-                            : 'py-3 px-10 rounded-xl hover:bg-[#e7b9b9]'
+                            ? 'bg-[#e7b9b9] py-3 px-10 rounded-lg hidden md:block'
+                            : 'py-3 px-10 rounded-xl hover:bg-[#e7b9b9] hidden md:block'
                     }>
                         <Home size={30} color='white' />
                     </NavLink>
 
                     <NavLink to={"reels"} className={({ isActive }) =>
                         isActive
-                            ? 'bg-[#e7b9b9] py-3 px-10 rounded-lg'
-                            : 'py-3 px-10 rounded-xl hover:bg-[#e7b9b9]'
+                            ? 'bg-[#e7b9b9] py-3 px-10 rounded-lg hidden md:block'
+                            : 'py-3 px-10 rounded-xl hover:bg-[#e7b9b9] hidden md:block'
                     }>
                         <Youtube size={30} color='white' />
                     </NavLink>
@@ -115,10 +178,10 @@ const Navbar = ({ handleOpenMenu, MessageWindowRef, RequestWindowRef, handleRefr
 
 
                 {/* SearchBar left */}
-                <div ref={searchRef} className="fixed left-0 top-0">
+                <div ref={searchRef} className={`fixed left-0 top-0 ${OpenChat && 'focus-within:z-[999]'} `}>
                     <div className={`flex flex-col bg-[#ffd8da] ${OpenChat && 'shadow-md'}`}>
                         <div className={`${!OpenChat ? '' : ''}  py-5 pr-4`}>
-                            <div className="flex gap-3 px-5 items-center w-[350px] relative ">
+                            <div className="flex gap-3 px-5 items-center w-[350px] relative  ">
 
                                 <div className=''>
                                     <p className={`font-bold tracking-[5px] text-2xl text-white drop-shadow-md transition-all duration-700 ${!OpenChat ? 'opacity-1' : 'opacity-0'}`}>STITZ</p>
@@ -129,7 +192,7 @@ const Navbar = ({ handleOpenMenu, MessageWindowRef, RequestWindowRef, handleRefr
                                     <ArrowLeft />
                                 </button>
 
-                                <label htmlFor="searchbar" className={`flex items-center px-2 py-3 rounded-full bg-white gap-3 transition-all duration-700 absolute right-0 ${OpenChat ? 'w-[290px]' : 'w-[230px]'}`}>
+                                <label htmlFor="searchbar" className={`flex items-center px-2 py-3 rounded-full bg-white gap-3 transition-all duration-700 absolute right-0 ${OpenChat ? 'lg:w-[290px] w-[290px]' : 'w-[40px] lg:w-[230px] left-[130px] lg:left-auto'}`}>
                                     <span><Search /></span>
                                     <input
                                         onChange={handleChangeSearchFriend}
@@ -193,11 +256,14 @@ const Navbar = ({ handleOpenMenu, MessageWindowRef, RequestWindowRef, handleRefr
                         </div>
 
                         {/* Notifi */}
-                        <div className='relative'>
+                        <div ref={NotifyWindowRef} onClick={() => handleOpenMenu('NotifyWindow')} className='relative'>
                             <button className="bg-[#e7b9b9] p-2.5 rounded-full">
                                 <NotificationsIcon size={25} className='text-white' />
                             </button>
-                            <div className='absolute w-6 h-6 bg-red-600 rounded-full left-[-5px] top-[-1px] text-[12px] flex items-center justify-center p-2.5 font-bold text-white animate-bounce'>25</div>
+                            {
+                                notifyDataFilter.length > 0 && <div className='absolute w-6 h-6 bg-red-600 rounded-full left-[-5px] top-[-1px] text-[12px] flex items-center justify-center p-2.5 font-bold text-white animate-bounce'>{notifyDataFilter.length}</div>
+                            }
+
                         </div>
 
                         {/* Account */}

@@ -38,7 +38,6 @@ const ProfileUser = ({ isOpenPopupImage, setIsOpenPopupImage }) => {
     const [isRequestFromUser, setIsRequestFromUser] = useState(false)
     const [AlreadySent, setAlreadySent] = useState([])
 
-    console.log('userData', userData)
     // Menu
     const [isOpenMenuFriend, setIsOpenMenuFriend] = useState(false)
     const [isOpenProfileImage, setIsOpenProfileImage] = useState(false)

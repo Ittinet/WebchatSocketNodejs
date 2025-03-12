@@ -136,7 +136,7 @@ const postSchema = new mongoose.Schema({
     },
     content: {
         type: String,
-        require: true
+        required: true
     },
     comments: [{
         user: {
@@ -169,13 +169,43 @@ const postSchema = new mongoose.Schema({
 
 })
 
+const notifySchema = new mongoose.Schema({
+    // user ที่เป่้นเจ้าของแจ้งเตือน
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    content: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Post',
+    },
+    type: {
+        type: String,
+        enum: ['like', 'post', 'comment', 'acceptfriend'],
+        required: true
+    },
+    userAccept : {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User' 
+    },
+    readByReceiver: {
+        type: Boolean,
+        default: false,
+    },
+    createAt: {
+        type: Date,
+        default: Date.now
+    }
+})
+
 
 exports.Message = mongoose.model('Message', messageSchema)
 exports.FriendRequest = mongoose.model('FriendRequest', friendRequestSchema)
 exports.User = mongoose.model('User', userSchema)
 exports.Friendship = mongoose.model('FriendShip', friendshipSchema)
 exports.Post = mongoose.model('Post', postSchema)
-
+exports.Notify = mongoose.model('Notify', notifySchema)
 
 
 

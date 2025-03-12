@@ -3,10 +3,12 @@ import { useEffect, useRef } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { AcceptFriend, GetcurrentFriend, GetcurrentRequest, RejectFriend } from "../../Reducers/userSlice"
 import { differenceInDays, differenceInHours, differenceInMinutes, differenceInMonths, differenceInSeconds, differenceInYears } from 'date-fns'
+import { useSocket } from "../../SocketContext"
 
 
 const RequestWindow = ({ RequestWindowRef, setMenuWindow }) => {
     const dispatch = useDispatch()
+    const { socket } = useSocket()
 
     const token = useSelector(state => state.auth.token)
     const currentRequest = useSelector(state => state.user.currentRequest)
@@ -60,10 +62,11 @@ const RequestWindow = ({ RequestWindowRef, setMenuWindow }) => {
         return 'เมื่อสักครู่'; // กรณีที่น้อยกว่า 1 วินาที
     };
 
-    const handleAccept = async ({ token, id }) => {
+    const handleAccept = async ({ token, usertarget }) => {
         try {
-            await dispatch(AcceptFriend({ token, id }))
+            await dispatch(AcceptFriend({ token, id: usertarget._id }))
             await dispatch(GetcurrentFriend(token))
+            socket.emit('AcceptFriendNotify', usertarget)
         } catch (error) {
             console.log(error)
         }
@@ -105,7 +108,7 @@ const RequestWindow = ({ RequestWindowRef, setMenuWindow }) => {
                                             <p className="text-md text-gray-600">{timeAgo(item.timestamp)}</p>
                                         </div>
                                         <div className="flex gap-2  justify-center">
-                                            <button onClick={() => handleAccept({ token, id: item.sender._id })} className="bg-[#e8d0fd] hover:bg-[#ccb5e0] text-gray-600 py-3 px-5 rounded-xl ">ยืนยัน</button>
+                                            <button onClick={() => handleAccept({ token, usertarget: item.sender })} className="bg-[#e8d0fd] hover:bg-[#ccb5e0] text-gray-600 py-3 px-5 rounded-xl ">ยืนยัน</button>
                                             <button onClick={() => dispatch(RejectFriend({ token, id: item.sender._id }))} className="bg-[#e1d5eb] hover:bg-[#ccb5e0] text-gray-600 py-1 px-5 rounded-xl ">ลบ</button>
                                         </div>
                                     </div>
